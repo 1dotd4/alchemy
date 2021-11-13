@@ -431,7 +431,7 @@
                         (point-bis->y p1))))
             (make-point-bis n (m->number x) (m->number y))))))
     (fold internal-add first-point other-points))
-  (mk-group '() ;; `(,n ,a ,b) Maybe I should use this for additional data
+  (mk-group `(,n ,a ,b) ;; Should say that this is for extra data, not just for sets
             (make-point-bis n 0 0)
             elliptic-add         
             elliptic-inverse))
@@ -514,6 +514,19 @@
     ((generate-square-multiply elliptic-add identity) point exponent)))
 
 ;; TODO: (elliptic-lift-x curve x) lift a point given it's x coordinate
+(define (elliptic-lift-x curve x)
+  (let* ((data (car curve))
+         (n (car curve))
+         (a (cadr curve))
+         (b (caddr curve)))
+    (tonelli
+      (remainder
+        (+ (expt x 3)
+          (* (expt x 2)
+              a)
+          (* b x))
+        n)
+      n)))
 
 ;; example
 (define my-curve (elliptic-curve 9739 497 1768))
