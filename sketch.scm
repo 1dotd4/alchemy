@@ -516,9 +516,9 @@
 ;; TODO: (elliptic-lift-x curve x) lift a point given it's x coordinate
 (define (elliptic-lift-x curve x)
   (let* ((data (car curve))
-         (n (car curve))
-         (a (cadr curve))
-         (b (caddr curve)))
+         (n (car data))
+         (a (cadr data))
+         (b (caddr data)))
     (tonelli
       (remainder
         (+ (expt x 3)
@@ -559,6 +559,18 @@
 (define QA (make-point-bis N 815 3190))
 (print ((group:expt my-curve-bis) QA 1829))
 
+(define n (- (expt 2 255) 19))
+(define x 9)
+;; Problem: this should be in the Montgomery form, not Weierstrass.
+;; Thus y^2 = x^3 + 486662 * x^2 + x mod 2^255 - 19.
+;; This imply that the lift function and the addition, doubling and power
+;; must be reviewd.
+;; See https://cryptohack.org/courses/elliptic/ladder/
+(define curve (elliptic-curve-bis n 486662 1))
+(define y (cdr (elliptic-lift-x curve x)))
+(print y)
+(define g (make-point-bis n x y))
+(print (car (car ((group:expt curve) g #x1337c0decafe))))
 
 ;;;; Polynomials
 
