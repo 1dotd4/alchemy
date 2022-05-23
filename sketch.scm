@@ -1,5 +1,6 @@
 (import scheme
         (chicken base)
+        (chicken random)
         (chicken repl)
         (chicken io)
         srfi-1
@@ -142,6 +143,55 @@
           (until-factored n (add1 i) r))
       r))
   (until-factored n 2 1))
+
+;; ===[ Prime Numbers ]===
+(define (modexpt b e M)
+  (cond
+    ((zero? e) 1)
+    ((even? e) (modexpt (modulo (* b b) M) (quotient e 2) M))
+    ((odd? e) (modulo (* b (modexpt b (- e 1) M)) M))))
+(define (split n)
+  (let recur ((s 0) (d n))
+    (if (odd? d)
+      (values s d)
+      (recur (add1 s) (quotient d 2)))))
+(define (composite-witness? n a)
+  (let*-values (((s d) (split (sub1 n)))
+                ((x)   (modexpt a d n)))
+    (and (not (= x 1))
+         (not (= x (sub1 n)))
+         (let try ((r (sub1 s)) (x (modexpt x 2 n)))
+           (or (zero? r)
+               (= x 1)
+               (and (not (= x (sub1 n)))
+                    (try (sub1 r) (modexpt x 2 n))))))))
+(define (pseudoprime? n k)
+  (or (zero? k)
+      (let ((a (+ 2 (pseudo-random-integer (- n 2)))))
+        (and (not (composite-witness? n a))
+             (pseudoprime? n (sub1 k))))))
+(define (prime? n)
+  (and (> n 1)
+       (or (= n 2)
+           (and (not (zero? (modulo n 2)))
+                (pseudoprime? n 50)))))
+(define (factors n)
+  (let *factor ((divisor 2) (number n) (factors '()))
+    (if (> (* divisor divisor) number)
+      (cons number factors)
+      (if (zero? (modulo number divisor))
+        (*factor divisor (quotient number divisor) (cons divisor factors))
+        (*factor (add1 divisor) number factors)))))
+(define (next-prime n)
+  (let rec ((next (add1 n)))
+    (if (prime? next)
+      next
+      (rec (add1 next)))))
+(define (nth-prime n)
+  (let rec ((prime 2) (nth 1))
+    (if (= n nth)
+      prime
+      (rec (next-prime prime) (add1 nth)))))
 
 
 ;; ===[ Modular Arithmetic ]===
