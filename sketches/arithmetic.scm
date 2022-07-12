@@ -1,3 +1,6 @@
+(cond-expand
+  (r7rs)
+  (chicken (import (r7rs))))
 (import
   (chicken format)
   ;(chicken pretty-print)
