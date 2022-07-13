@@ -1,25 +1,35 @@
-(import scheme
-        (chicken base)
-        (chicken random)
-        (chicken repl)
-        (chicken io)
-        srfi-1
-        miscmacros
-        (clojurian syntax)
-        ;; (clojurian atom)
-        utf8
-        srfi-13
-        linenoise
-        tcp6
-        test)
+(import
+  (scheme base)
+  (scheme write)
+  (srfi 1)
+  (srfi 28))
+
+; (import scheme
+;         (chicken base)
+;         (chicken random)
+;         (chicken repl)
+;         (chicken io)
+;         srfi-1
+;         miscmacros
+;         (clojurian syntax)
+;         ;; (clojurian atom)
+;         utf8
+;         srfi-13
+;         linenoise
+;         tcp6
+;         test)
 
 ;;; ===[ Introduction ]===
 
 ;;; https://www.scheme.com/tspl4/control.html#./control:h6
 
 (define (inspect i)
-  (print i)
+  (display i)
+  (display "\n")
   i)
+
+(define (add1 n) (+ n 1))
+(define (sub1 n) (- n 1))
 
 ;;; generic square multiply
 (define (generate-square-multiply mult-fn id)
@@ -120,7 +130,8 @@
   (begin 
     (let ((a 8479994658316772151941616510097127087554541274812435112009425778595495359700244470400642403747058566807127814165396640215844192327900454116257979487432016769329970767046735091249898678088061634796559556704959846424131820416048436501387617211770124292793308079214153179977624440438616958575058361193975686620046439877308339989295604537867493683872778843921771307305602776398786978353866231661453376056771972069776398999013769588936194859344941268223184197231368887060609212875507518936172060702209557124430477137421847130682601666968691651447236917018634902407704797328509461854842432015009878011354022108661461024768)
           (p 30531851861994333252675935111487950694414332763909083514133769861350960895076504687261369815735742549428789138300843082086550059082835141454526618160634109969195486322015775943030060449557090064811940139431735209185996454739163555910726493597222646855506445602953689527405362207926990442391705014604777038685880527537489845359101552442292804398472642356609304810680731556542002301547846635101455995732584071355903010856718680732337369128498655255277003643669031694516851390505923416710601212618443109844041514942401969629158975457079026906304328749039997262960301209158175920051890620947063936347307238412281568760161))
-      (print (tonelli a p)))))
+      (display (tonelli a p))
+      (display "\n"))))
 
 ;; Note to self, get a factor function and simplify this trivial
 ;; division.
@@ -244,7 +255,7 @@
               (+ n x))
           n)
         (begin
-          (print "cannot get inverse of " i " mod " n)
+          (display (format "cannot get inverse of ~A mod ~A\n" i n))
           #f))))
 
 (define (m+ a . bs)
@@ -369,13 +380,20 @@
          (inv (group:inverse g))
          (ord (group:order g))
          (pow (group:expt g)))
-    (print id)
-    (print (c 4 6))
-    (print (inv 5))
-    (print (ord 5))
-    (print (ord 0))
-    (print (ord 2))
-    (print (pow 2 3))
+    (display id)
+    (display "\n")
+    (display (c 4 6))
+    (display "\n")
+    (display (inv 5))
+    (display "\n")
+    (display (ord 5))
+    (display "\n")
+    (display (ord 0))
+    (display "\n")
+    (display (ord 2))
+    (display "\n")
+    (display (pow 2 3))
+    (display "\n")
   ))
 
 
@@ -582,32 +600,41 @@
 (define my-curve (elliptic-curve 9739 497 1768))
 (define X (make-point my-curve 5274 2841))
 (define Y (make-point my-curve 8669 740))
-(print (elliptic-add X X))
-(print (elliptic-add X Y))
+(display (elliptic-add X X))
+(display "\n")
+(display (elliptic-add X Y))
+(display "\n")
 (define P (make-point my-curve 493 5564))
 (define Q (make-point my-curve 1539 4742))
 (define R (make-point my-curve 4403 5202))
-(print (elliptic-add P P Q R))
+(display (elliptic-add P P Q R))
+(display "\n")
 ;; (define G (make-point my-curve 1804 5368))
 (define QA (make-point my-curve 815 3190))
-(print (elliptic-scalar QA 1829))
+(display (elliptic-scalar QA 1829))
+(display "\n")
 
 
-(print "example bis")
+(display "example bis")
+(display "\n")
 ;; example-bis
 (define N 9739)
 (define my-curve-bis (elliptic-curve-bis N 497 1768))
 (define X (make-point-bis N 5274 2841))
 (define Y (make-point-bis N 8669 740))
-(print ((group:composition my-curve-bis) X X))
-(print ((group:composition my-curve-bis) X Y))
+(display ((group:composition my-curve-bis) X X))
+(display "\n")
+(display ((group:composition my-curve-bis) X Y))
+(display "\n")
 (define P (make-point-bis N 493 5564))
 (define Q (make-point-bis N 1539 4742))
 (define R (make-point-bis N 4403 5202))
-(print ((group:composition my-curve-bis) P P Q R))
+(display ((group:composition my-curve-bis) P P Q R))
+(display "\n")
 ;; G?
 (define QA (make-point-bis N 815 3190))
-(print ((group:expt my-curve-bis) QA 1829))
+(display ((group:expt my-curve-bis) QA 1829))
+(display "\n")
 
 (define n (- (expt 2 255) 19))
 (define x 9)
@@ -618,9 +645,11 @@
 ;; See https://cryptohack.org/courses/elliptic/ladder/
 (define curve (elliptic-curve-bis n 486662 1))
 (define y (cdr (elliptic-lift-x curve x)))
-(print y)
+(display y)
+(display "\n")
 (define g (make-point-bis n x y))
-(print (car (car ((group:expt curve) g #x1337c0decafe))))
+(display (car (car ((group:expt curve) g #x1337c0decafe))))
+(display "\n")
 
 ;;;; Polynomials
 
@@ -677,21 +706,22 @@
 ;; (connect/wp "127.0.0.1:1337" nc-example)
 (define (nc-example i o)
   (write-line "Connected, write a line." o)
-  (print (read-line i))
+  (display (read-line i))
+  (display "\n")
   (write-line "Yup I received it, bye." o)
   )
 
 ;;; Connect with procedure (abbreviated to conn/wp)
 ;; try to connect and if procedure has an gracefully close the connection
 ;; procedure must accept two arguments, in- and out-port
-(define (conn/wp host-and-port procedure)
-  (define-values (in-port out-port) (tcp-connect host-and-port))
-  (dynamic-wind
-    (lambda () #f)
-    (lambda () (procedure in-port out-port))
-    (lambda () (begin
-                  (close-input-port in-port)
-                  (close-output-port out-port)))))
+; (define (conn/wp host-and-port procedure)
+;   (define-values (in-port out-port) (tcp-connect host-and-port))
+;   (dynamic-wind
+;     (lambda () #f)
+;     (lambda () (procedure in-port out-port))
+;     (lambda () (begin
+;                   (close-input-port in-port)
+;                   (close-output-port out-port)))))
 
 ;;; ===[ Appendix ]===
 
@@ -701,15 +731,15 @@
 
 ;;; The repl
 
-;;; curr-run will reset on reload
-(set! curr-run 0)
-
-(current-input-port (make-linenoise-port))
-(define (repl-prompt)
-  (lambda ()
-    (begin
-      (set! curr-run (add1 curr-run))
-      ;;; display the prompt
-      (string-join (list ";; " (number->string curr-run) ". ") ""))))
-
-(repl)
+; ;;; curr-run will reset on reload
+; (set! curr-run 0)
+; 
+; (current-input-port (make-linenoise-port))
+; (define (repl-prompt)
+;   (lambda ()
+;     (begin
+;       (set! curr-run (add1 curr-run))
+;       ;;; display the prompt
+;       (string-join (list ";; " (number->string curr-run) ". ") ""))))
+; 
+; (repl)
