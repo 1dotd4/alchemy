@@ -1,14 +1,12 @@
-(cond-expand
-  (r7rs)
-  (chicken (import (r7rs))))
-(import
-  (chicken format)
-  ;(chicken pretty-print)
-  )
+(import 
+  (scheme base)
+  (scheme write)
+  (srfi 28))
+
 (define (mod a n)
   (lambda (op b)
     (case op 
-      ((pp) (print (format "~s mod ~s" a n)))
+      ((pp)  (display (format "~s mod ~s\n" a n)))
       ((add) (mod (modulo (+ a b) n) n))
       ((sub) (mod (modulo (- a b) n) n))
       ((inv) (mod (modulo (- a) n)   n))
@@ -31,7 +29,7 @@
 (define (mod a n) (cons a n))
 (define (moduli  a) (car a))
 (define (modulus a) (cdr a))
-(define (pp a) (print (format "~s mod ~s" (moduli a) (modulus a))))
+(define (pp a) (display (format "~s mod ~s\n" (moduli a) (modulus a))))
 (define (add a b)
   (if (eq? (modulus a) (modulus b))
     (mod (modulo (+ (moduli a) (moduli b)) (modulus a))
