@@ -1,8 +1,11 @@
 (import
   (scheme base)
   (scheme write)
-  (srfi 1)
-  (srfi 28))
+  (scheme load)
+  (srfi 1)  ; List library
+  (srfi 27) ; Sources of random bits
+  (srfi 28) ; Basic format string
+)
 
 ; (import scheme
 ;         (chicken base)
@@ -178,7 +181,7 @@
                     (try (sub1 r) (modexpt x 2 n))))))))
 (define (pseudoprime? n k)
   (or (zero? k)
-      (let ((a (+ 2 (pseudo-random-integer (- n 2)))))
+      (let ((a (+ 2 (random-integer (- n 2)))))
         (and (not (composite-witness? n a))
              (pseudoprime? n (sub1 k))))))
 (define (prime? n)
