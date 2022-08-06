@@ -1,0 +1,66 @@
+Alchemy is an extensible computer algebra library. It provides a meaningful way
+to express and use mathematical objects. A notable goal is breaking cryptography
+without fighting the library.
+
+# Writing on sandtable
+
+I want Alchemy to be:
+- readable -- written for readability and well documented;
+- portable -- written in R7RS (hackable, scriptable, ...) and tested on
+  chicken-scheme and gambit;
+- first-class higher order functions for algebric algorithms;
+- TDD -- current needs instead of fuzzy future needs.
+
+Due to Scheme nature, you have an incredible tool. You can do virtually
+anything. But you need a proper setup.
+
+You may look at Haskell and say how nice it is: free type checking! But the
+syntax and other annoying parts would stop us from modeling our lava into nice
+placed stones. So the first step is borrowing one of the nice part of Haskell:
+propositions as types. We encapsulate the proof of a type inside a variable.
+This is what Haskell does implicitly.
+
+Take for example the greatest commond divosor algorithm.
+
+  -- out type
+  class Ring a where
+    (<+>) :: a -> a -> a
+    (<*>) :: a -> a -> a
+    neg   :: a -> a
+    one :: a
+    zero  :: a
+
+  -- our proof instance
+  instance Ring Z where
+    (<+>) = (+)
+    (<*>) = (*)
+    neg   = negate
+    zero  = 0
+    one   = 1
+
+  -- our implementation of the algorithm
+  gcd :: (Ring t) => t * t -> t
+  gcd = ...
+
+  -- virtually passed ``gcd :: RingProf -> t * t -> t``
+  gcd 3 7
+
+So in Scheme it becomes a bit verbose due to its nature, but this can be slimmed
+with some macros later.
+
+  (gcd my-ring-proof 3 7)
+
+The proof will contain all the refernces to the algorithm needed to implement
+the GCD.
+
+This same method will allow us to implement the power function for both integers
+over a modulo and points over an elliptic curve.
+
+Doing proof manipulation is going to be the most important step. In this way a
+proof of a ring already contains the proof of a group (on the sum operation). It
+can be reimplemented or induced using coercion.  After this we will have nice
+and generic higher-order functions that will work with any object respecting
+some abstract pattern. Infact, the same GCD function can be used for
+polynomials.
+
+
