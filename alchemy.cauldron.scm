@@ -74,7 +74,7 @@
                   (display description)
                   (let ((e1 ((lambda () something)))
                         (e2 ((lambda () something-else))))
-                    (if (eq? e1 e2)
+                    (if (equal? e1 e2)
                       (display "\n")
                       (display (format " \tFALSE. ~s != ~s \n" e1 e2))))))))))))))
     
