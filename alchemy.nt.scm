@@ -5,7 +5,6 @@
   (export sum-of-two-squares? prime? legendreSymbol tonelli phi)
   (import (scheme base)
           (scheme write)
-          (scheme inexact)
           (srfi 27))
   (begin
     (define (add1 n) (+ n 1))
