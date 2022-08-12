@@ -3,6 +3,7 @@
 (load "version.scm")
 (load "helper.scm")
 (load "alchemy.cauldron.scm")
+(load "alchemy.algebra.scm")
 (load "alchemy.number-theory.scm")
 (load "alchemy.encoding.scm")
 (load "alchemy.cipher.scm")
@@ -11,6 +12,7 @@
 (display (string-append "Loaded version " *version*))
 
 (import (alchemy cauldron)
+        (alchemy algebra)
         (alchemy number-theory)
         (alchemy encoding)
         (alchemy cipher)

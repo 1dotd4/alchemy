@@ -1,15 +1,127 @@
-;;;; Number Theory
-
-
 (define-library (alchemy number-theory)
-  (export sum-of-two-squares? prime? legendreSymbol tonelli phi)
+  (export sum-of-two-squares? prime? legendreSymbol tonelli phi
+          modexpt)
   (import (scheme base)
           (scheme write)
+          (alchemy algebra)
           (srfi 27))
   (begin
     (define (add1 n) (+ n 1))
     (define (sub1 n) (+ n -1))
 
+    ; ;;; The Powering Algorithms
+    ; ;; (G, *) a group.
+    ; ;; recall group are closed under * and every element has an inverse.
+
+    ; ;; 1.2.1
+    ; (define (right-left-binary group g n)
+    ;   (define identity
+    ;     (group:identity group))
+    ;   (define (inverse g)
+    ;     (group:inverse group g))
+    ;   (define (compose a b)
+    ;     (group:composition group a b))
+    ;   ;; g \in G, n \in Z
+    ;   ;; 1 is the unit
+    ;   (if (zero? n) 1
+    ;     (if (< n 0)
+    ;       (right-left-binary (inverse g) (- n))
+    ;       (let rec ((y identity) (N n) (z g))
+    ;         (if (zero? N) y
+    ;           (if (odd? N)
+    ;             (rec (compose z y) (quotient N 2) (compose z z))
+    ;             (rec y             (quotient N 2) (compose z z))))))))
+
+
+    ; ;; 1.3.6
+    ; (define (xgcd ring a b) ; => (u, v, d)
+    ;   (define (ring-zero? a)
+    ;     (ring:zero? a)
+    ;   (define (ring-- a b)
+    ;     (ring:* ring a b))
+    ;   (define (ring-* a b)
+    ;     (ring:* ring a b))
+    ;   (define (ring-quotient a b)
+    ;     (ring:quotient ring a b))
+    ;   (define (ring-modulo a b)
+    ;     (ring:modulo ring a b))
+    ;   (if (ring-zero? b)
+    ;     (list
+    ;       (ring:identity ring)
+    ;       (ring:zero ring)
+    ;       a)
+    ;     (let rec ((u (ring:identity ring)) (d a) (v1 (ring:zero ring)) (v3 b))
+    ;       (if (ring-zero? v3)
+    ;         (list u (ring:quotient (ring-- d (ring-* a u)) b) d)
+    ;         (let* ((q  (ring:quotient d v3))
+    ;                (t3 (ring:modulo   d v3))
+    ;                (t1 (ring-- u (ring-* q v1))))
+    ;           (rec v1 v3 t1 t3))))))
+
+    ; ;; 1.3.12
+    ; ; note, gcd(mi, mj) = 1 for any pair.
+    ; (define (ctr-inductive xmis) ; (... (xi . mi) ...) => x ≡ xi mod mi for all i
+    ;   (let rec ((m (caar xmis)) (x (cdar xmis)) (rxmis (cdr xmis)))
+    ;     (if (null? rxmis) x
+    ;       (let* ((xmi (car rxmis))
+    ;              (xi (car xmi))
+    ;              (mi (cdr xmi))
+    ;              (r (xgcd-euclid m mi))
+    ;              (u (car r))
+    ;              (v (cadr r))
+    ;              (d (caddr r)))
+    ;         (rec (* m mi) (modulo (+ (* u m xi) (* v mi x)) (* m mi)) (cdr xmis))))))
+
+    ; ;;; Coninued Fraction Expression of Real Numbers
+    ; ;; x = a0 + (1 / (a1 + (1 / a2 + ...)))
+    ; ;; x = [a0, a1, a2, ...]
+
+    ; ;; 1.3.13
+    ; (define (continue-fraction-lehmer x a a1) ; a < x < a1
+    ;   ;; check a and a1 are exact as should be rational!
+    ;   (error "okay no, write it when you need it"))
+
+    ; ; 1.3.14
+    ; (define (continue-fraction-gauss a b) ; a, b independent vectors in a Eucliedean vector space
+    ;   (error "okay no, write it when you need it"))
+
+    ; ;; The Legebdre Symbol
+
+    ; ; in (Z/nZ)^*
+    ; 
+    ; ;; 1.4.3
+    ; (define (order-of-element h g)
+    ;   ; G a group
+    ;   ; h cardinality of the group
+    ;   ; g an element of G
+    ;   ; 1 unit element of G
+    ;   (let ((fs (factor h)))
+    ;     (let rec ((e h) (rfs fs))
+    ;       (if (null? rfs) e
+    ;         (let ((ee (/ e (expt (caar rfs) (cdar rfs))))
+    ;               (g1 (expt g ee)))
+    ;           (let rec2 ((gg1 g1) (eee ee))
+    ;             (if (= 1 gg1)
+    ;               (rec ee (cdr rfs))
+    ;               (rec2 (expt g1 (caar rfs))
+    ;                     (* ee (caar rfs))))))))))
+
+    ;; 1.4.4
+    (define (primitive-root p)
+      (error "Will not found"))
+
+    ;; 1.4.10
+    (define (kronecker a b)
+      (error "Not today please"))
+
+
+    ;; The Algorithm of Tonelly and Shanks
+
+    ;; 1.5.1
+    (define (square-root-mod-p a p)
+      (error "copy me from somewhere else"))
+
+    ;; =================================
     ;; n = a^2 + b^2 => n mod 4 === {0, 1, 2}
     (define (sum-of-two-squares? n)
       (member (modulo n 4) '(0 1 2)))
@@ -115,33 +227,35 @@
         ((zero? e) 1)
         ((even? e) (modexpt (modulo (* b b) M) (quotient e 2) M))
         ((odd? e) (modulo (* b (modexpt b (- e 1) M)) M))))
-    (define (pseudoprime? n)
-      (define (split n)
-        (let recur ((s 0) (d n))
-          (if (odd? d)
-            (values s d)
-            (recur (+ 1 s) (quotient d 2)))))
-      (define (composite-witness? n a)
-        (let*-values (((s d) (split (sub1 n)))
-                      ((x)   (modexpt a d n)))
-          (and (not (= x 1))
-               (not (= x (sub1 n)))
-               (let try ((r (sub1 s)) (x (modexpt x 2 n)))
-                 (or (zero? r)
-                     (= x 1)
-                     (and (not (= x (sub1 n)))
-                          (try (sub1 r) (modexpt x 2 n))))))))
-      (let-values (((s d) (split (sub1 n))))
-        (let rec ((a (+ 2 (random-integer (- n 2))))
-                  (k s))
-          (or (zero? k)
-              (and (not (composite-witness? n a))
-                   (rec (+ 2 (random-integer (- n 2))) (sub1 k)))))))
+
     (define (prime? n)
+      (define (pseudoprime? n)
+        (define (split n)
+          (let recur ((s 0) (d n))
+            (if (odd? d)
+              (values s d)
+              (recur (+ 1 s) (quotient d 2)))))
+        (define (composite-witness? n a)
+          (let*-values (((s d) (split (sub1 n)))
+                        ((x)   (modexpt a d n)))
+            (and (not (= x 1))
+                 (not (= x (sub1 n)))
+                 (let try ((r (sub1 s)) (x (modexpt x 2 n)))
+                   (or (zero? r)
+                       (= x 1)
+                       (and (not (= x (sub1 n)))
+                            (try (sub1 r) (modexpt x 2 n))))))))
+        (let-values (((s d) (split (sub1 n))))
+          (let rec ((a (+ 2 (random-integer (- n 2))))
+                    (k s))
+            (or (zero? k)
+                (and (not (composite-witness? n a))
+                     (rec (+ 2 (random-integer (- n 2))) (sub1 k)))))))
       (and (> n 1)
            (or (= n 2)
                (and (not (zero? (modulo n 2)))
                     (pseudoprime? n)))))
+
     (define (factors n)
       (let *factor ((divisor 2) (number n) (factors '()))
         (if (> (* divisor divisor) number)
