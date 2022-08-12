@@ -4,4 +4,4 @@
 ;; Licence??
 
 
-(define version "0.0")
+(define *version* "0.0\n")
