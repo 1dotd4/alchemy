@@ -1,101 +1,66 @@
 (define-library (alchemy algebra)
-  (export make-set set? set:member? set:cardinality
-          make-monoid monoid? monoid:member? monoid:cardinality monoid:identity monoid:compose
-          monoid->set
-          make-group group? group:member? group:cardinality group:identity group:compose
-          group->monoid
-          make-ring ring? ring:member? ring:cardinality ring:zero ring:add ring:negate ring:one ring:multiply
-          ring->additive-group ring->multiplicative-monoid
-          make-field field? field:member? field:cardinality field:zero field:add field:negate field:one
-          field:multiply field:inverse field->additive-group field->multiplicative-group
+  (export make-set s:member? s:cardinality
+          make-monoid make-group g:identity g:compose g:inverse
+          g:identity?  g:got-inverse?
+          make-ring r:zero r:add r:negate r:one r:multiply
+          r:zero? r:one?
+          make-euclidean-ring r:euclidean-division r:quotient r:modulo
+          make-field f:inverse
+          ring->multiplicative-monoid
+          field->multiplicative-group
           ;;
           )
   (import (scheme base)
           (scheme case-lambda)
+          (srfi 1)
           )
   (begin
     ;; Note: axioms are not proven here
     
     ;; TODO: easier coercion.
 
+    (define (make-algebraic-structure . stuff)
+      (cons 'algebraic-structure stuff))
+
+
     ;;;; Simple structure
 
     ;;; Set
     (define (make-set member? cardinality)
-      (list
-        'set
-        member?
-        cardinality))
+      (make-algebraic-structure member? cardinality))
 
-    (define (set? set)
-      (equal? 'set (car set)))
+    (define (s:member? a e)
+      ((list-ref a 1) e))
 
-    (define (set:member? set e)
-      ((cadr set) e))
-
-    (define (set:cardinality set)
-      (list-ref set 2))
-
+    (define (s:cardinality a)
+      (list-ref a 2))
 
     ;;;; Group-like structure
 
     ;;; Monoid
     (define (make-monoid member? cardinality identity compose)
-      (list
-        'monoid
-        (make-set member?)
-        identity
-        compose))
+      (make-algebraic-structure member? cardinality
+                                identity compose))
 
-    (define (monoid? monoid)
-      (equal? 'monoid (car monoid)))
-    
-    (define (monoid->set monoid)
-      (list-ref monoid 1))
+    (define (g:identity a)
+      (list-ref a 3))
 
-    (define (monoid:member? monoid e)
-      (set:member? (monoid->set monoid) e))
+    (define (g:identity? a b)
+      (equal? (list-ref a 3) b))
 
-    (define (monoid:cardinality monoid)
-      (set:cardinality (monoid->set monoid)))
-
-    (define (monoid:identity monoid)
-      (list-ref monoid 2))
-
-    (define (monoid:compose monoid a b)
-      ((list-ref monoid 3) a b))
+    (define (g:compose a b c)
+      ((list-ref a 4) b c))
 
     ;;; Group
     (define (make-group member? cardinality identity compose inverse)
-      (list
-        'group
-        (make-monoid member? cardinality identity compose)
-        inverse))
+      (make-algebraic-structure member? cardinality
+                                identity compose inverse))
 
-    (define (group? group)
-      (equal? 'group (car group)))
+    (define (g:got-inverse? a)
+      (> (length a) 5))
 
-    (define (group->monoid group)
-      (car group))
-
-    (define (group->set group)
-      (monoid->set (car group)))
-
-    (define (group:member? group e)
-      (monoid:member? (group->monoid group) e))
-
-    (define (group:cardinality group)
-      (monoid:cardinality (group->monoid group)))
-
-    (define (group:identity group)
-      (monoid:identity (group->monoid group)))
-
-    (define (group:compose group a b)
-      (monoid:compose (group->monoid group) a b))
-
-    (define (group:inverse group a)
-      ((list-ref group 2) a))
-
+    (define (g:inverse a e)
+      ((list-ref a 5) e))
 
     ;;;; Ring-like structure
 
@@ -103,102 +68,87 @@
 
     ;;; Ring (group and monoid)
     (define (make-ring member? cardinality zero add negate one multiply)
-      (list 'ring
-            (make-group member? cardinality zero add negate)
-            one multiply))
+      (make-algebraic-structure member? cardinality
+                                zero add negate
+                                one multiply))
 
-    (define (ring? ring)
-      (equal? 'ring (car ring)))
+    (define (r:zero a)
+      (list-ref a 3))
 
-    (define (ring->additive-group ring)
-      (list-ref ring 1))
-  
-    (define (ring:member? ring e)
-      (group:member? (ring->additive-group ring) e))
+    (define (r:zero? a b)
+      (equal? (list-ref a 3) b))
 
-    (define (ring:cardinality ring)
-      (group:cardinality (ring->additive-group ring)))
+    (define (r:add a b c)
+      ((list-ref a 4) b c))
 
-    (define (ring:zero ring)
-      (group:identity (ring->additive-group ring)))
+    (define (r:negate a e)
+      ((list-ref a 5) e))
 
-    (define (ring:add ring a b)
-      (group:compose (ring->additive-group ring) a b))
+    (define (r:one a)
+      (list-ref a 6))
 
-    (define (ring:negate ring a)
-      (group:inverse (ring->additive-group ring) a))
+    (define (r:one? a b)
+      (equal? (list-ref a 6) b))
 
-    (define (ring:one ring)
-      (list-ref ring 2))
+    (define (r:multiply a b c)
+      ((list-ref a 7) b c))
+    
+    (define (make-euclidean-ring member? cardinality
+                                 zero add negate
+                                 one multiply
+                                 less?)
+      (make-algebraic-structure member? cardinality
+                                zero add negate
+                                one multiply
+                                less?))
 
-    (define (ring:multiply ring a b)
-      ((list-ref ring 3) a b))
+    (define (r:less? r a b)
+      ((list-ref r 8) a b))
 
-    (define (ring:inverse ring a)
-      ((list-ref ring 4) a))
+    ;;; NOTE THAT THIS HERE IS INACCURATE
+    (define (r:euclidean-division r a b)
+      (let rec ((rem a) (divisor b) (quot (r:zero r)))
+        (if (r:less? r rem divisor)
+          (cons quot rem)
+          (rec (r:add r rem (r:negate r b))
+               divisor
+               (r:add r quot (r:one r))))))
 
+    (define (r:quotient r a b)
+      (car (r:euclidean-division r a b)))
+
+    (define (r:modulo r a b)
+      (cdr (r:euclidean-division r a b)))
+
+    ; XXX
     (define (ring->multiplicative-monoid ring)
-      (make-monoid
-        (ring:member? ring)
-        (ring:cardinality ring)
-        (ring:one ring)
-        (ring:multiply ring)))
-
+      (apply make-monoid
+             (append
+               (take ring 2)
+               (drop ring 6))))
 
     ;;; Field (Two groups)
     ; Group<+> + Monoid<*>
     ; = Ring + inverse<*>
-    (define (make-field member? cardinality zero add negate one multiply inverse)
-      (list 'field
-            (make-group member? cardinality zero add negate)
-            inverse))
-    
-    (define (field? field)
-      (equal? 'field (car field)))
+    (define (make-field member? cardinality zero add negate one multiply less? inverse)
+      (make-algebraic-structure member? cardinality
+                                zero add negate
+                                one multiply less? inverse))
 
-    (define (field->ring field)
-      (list-ref field 1))
-
-    (define (field->additive-group ring)
-      (list-ref ring 1))
-
-    (define (field:member? field e)
-      (ring:member? (field->ring field) e))
-
-    (define (field:cardinality field)
-      (ring:cardinality (field->ring field)))
-
-    (define (field:zero field)
-      (ring:zero (field->ring field)))
-
-    (define (field:add field a b)
-      (ring:add (field->ring field) a b))
-    
-    (define (field:negate field a)
-      (ring:negate (field->ring field) a))
-
-    (define (field:one field)
-      (ring:one (field->ring field)))
-
-    (define (field:multiply field a b)
-      (ring:multiply (field->ring field) a b))
-    
-    (define (field:inverse field a)
-      ((list-ref field 2) a))
-    
     (define (field->multiplicative-group field)
       (define (multiplicative-member? a)
-        (if (not (equal? (field:zero field)))
-          (ring:member? (field->ring field) a)))
+        (if (not (equal? (g:identity field)))
+          (s:member? field a)))
       (define multiplicative-cardinality
-        (- (ring:cardinality (field->ring field)) 1))
-      (make-group
-        multiplicative-member? 
-        multiplicative-cardinality
-        (field:one field)
-        (field:multiply field)
-        (field:inverse field)))
+        (- (s:cardinality field) 1))
+      (apply make-group
+             (append
+               (list multiplicative-member? 
+                     multiplicative-cardinality)
+               (drop field 6))))
 
+    (define (f:inverse a b)
+      ((list-ref a 9) b))
 
     ;;;; Lattice structure
 

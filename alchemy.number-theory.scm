@@ -1,5 +1,8 @@
 (define-library (alchemy number-theory)
-  (export sum-of-two-squares? prime? legendreSymbol tonelli phi
+  (export double-and-add xgcd
+          integer-ring
+          make-ring-modulo
+    sum-of-two-squares? prime? legendreSymbol tonelli phi
           modexpt)
   (import (scheme base)
           (scheme write)
@@ -9,53 +12,49 @@
     (define (add1 n) (+ n 1))
     (define (sub1 n) (+ n -1))
 
+    (define integer-ring
+      (make-euclidean-ring integer?  'inf
+        0 + - 1 * <))
+
+    (define (make-ring-modulo n)
+      (make-ring integer? (- n 1)
+                 0 (lambda (a b) (modulo (+ a b) n)) (lambda (a) (- n a))
+                 1 (lambda (a b) (modulo (* a b) n))))
+
     ; ;;; The Powering Algorithms
     ; ;; (G, *) a group.
     ; ;; recall group are closed under * and every element has an inverse.
 
     ;; 1.2.1
-    (define (right-left-binary algebraic-structure g n)
-      (let ((monoid (cond
-                      ((monoid? algebraic-structure) algebraic-structure)
-                      ((group? algebraic-structure) (group->monoid algebraic-structure))
-                      ((ring? algebraic-structure) (ring->multiplicative-monoid algebraic-structure))
-                      ((field? algebraic-structure) (group->monoid (field->multiplicative-group algebraic-structure)))
-                      (else (error "Sorry Cohen.")))))
-        (if (zero? n)
-          (monoid:identity monoid)
-          (if (< n 0)
-            (error "Dear Cohen, no, I'll use a monoid because I don't have the inverse when I want to power on a ring.")
-            (let rec ((y (monoid:identity monoid)) (N n) (z g))
-              (if (zero? N) y
-                (if (odd? N)
-                  (rec (monoid:compose monoid z y) (quotient N 2) (monoid:compose monoid z z))
-                  (rec y                           (quotient N 2) (monoid:compose monoid z z)))))))))
-
+    (define (double-and-add algebraic-structure g n)
+      (if (zero? n)
+        (g:identity algebraic-structure)
+        (if (< n 0)
+          (if (g:got-inverse? algebraic-structure)
+            (double-and-add (g:inverse algebraic-structure g) (- n))
+            (error "Dear Cohen, no, I'll use a monoid because I don't have the inverse when I want to power on a ring."))
+          (let rec ((y (g:identity algebraic-structure)) (N n) (z g))
+            (if (zero? N) y
+              (if (odd? N)
+                (rec (g:compose algebraic-structure z y) (quotient N 2) (g:compose algebraic-structure z z))
+                (rec y                                   (quotient N 2) (g:compose algebraic-structure z z))))))))
 
     ;; 1.3.6
-    ; (define (xgcd ring a b) ; => (u, v, d)
-    ;   (define (ring-zero? a)
-    ;     (ring:zero? a)
-    ;   (define (ring-- a b)
-    ;     (ring:* ring a b))
-    ;   (define (ring-* a b)
-    ;     (ring:* ring a b))
-    ;   (define (ring-quotient a b)
-    ;     (ring:quotient ring a b))
-    ;   (define (ring-modulo a b)
-    ;     (ring:modulo ring a b))
-    ;   (if (ring-zero? b)
-    ;     (list
-    ;       (ring:identity ring)
-    ;       (ring:zero ring)
-    ;       a)
-    ;     (let rec ((u (ring:identity ring)) (d a) (v1 (ring:zero ring)) (v3 b))
-    ;       (if (ring-zero? v3)
-    ;         (list u (ring:quotient (ring-- d (ring-* a u)) b) d)
-    ;         (let* ((q  (ring:quotient d v3))
-    ;                (t3 (ring:modulo   d v3))
-    ;                (t1 (ring-- u (ring-* q v1))))
-    ;           (rec v1 v3 t1 t3))))))
+    (define (xgcd ring a b) ; => (u, v, d)
+      (if (r:zero? ring b)
+        (list
+          (r:one ring)
+          (r:zero ring)
+          a)
+        (let rec ((u (r:one ring)) (d a) (v1 (r:zero ring)) (v3 b))
+          (if (r:zero? ring v3)
+            (list u
+                  (r:quotient ring (r:add ring d (r:negate ring (r:multiply ring a u))) b)
+                  d)
+            (let* ((q  (r:quotient ring d v3))
+                   (t3 (r:modulo   ring d v3))
+                   (t1 (r:add ring u (r:negate ring (r:multiply ring q v1)))))
+              (rec v1 v3 t1 t3))))))
 
     ; ;; 1.3.12
     ; ; note, gcd(mi, mj) = 1 for any pair.
