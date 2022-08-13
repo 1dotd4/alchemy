@@ -78,20 +78,15 @@
     ;; https://mathstrek.blog/2012/10/31/introduction-to-ring-theory-8/
 
     ;;; Ring (group and monoid)
-    (define make-ring
-      (case-lambda
-        ((additive-member? zero add negate multiplicative-member? one multiply)
-         (make-ring additive-member? zero add negate multiplicative-member? one multiply
-                    (lambda (a) (error "Multiplicative group not defined."))))
-        ((additive-member? zero add negate multiplicative-member? one multiply inverse)
-         (list 'ring
-               (make-group additive-member?       zero add negate)
-               (make-group multiplicative-member? one multiply inverse)))))
+    (define (make-ring member? zero add negate one multiply)
+      (list 'ring
+            (make-group member? zero add negate)
+            one multiply))
 
     (define (ring->additive-group ring)
       (list-ref ring 1))
   
-    (define (ring:additive-member? ring e)
+    (define (ring:member? ring e)
       (group:member? (ring->additive-group ring) e))
 
     (define (ring:zero ring)
@@ -103,25 +98,62 @@
     (define (ring:negate ring a)
       (group:inverse (ring->additive-group ring) a))
 
-    (define (ring->multiplicative-group ring)
+    (define (ring:one ring)
       (list-ref ring 2))
 
-    (define (ring:multiplicative-member? ring e)
-      (group:member? (ring->multiplicative-group ring) e))
-
-    (define (ring:one ring)
-      (group:identity (ring->multiplicative-group ring)))
-
     (define (ring:multiply ring a b)
-      (group:compose (ring->multiplicative-group ring) a b))
+      ((list-ref ring 3) a b))
 
     (define (ring:inverse ring a)
-      (group:inverse (ring->multiplicative-group ring) a))
+      ((list-ref ring 4) a))
 
 
     ;;; Field (Two groups)
     ; Group<+> + Monoid<*>
     ; = Ring + inverse<*>
+    (define (make-field member? zero add negate one multiply inverse)
+      (list 'field
+            (make-group member? zero add negate)
+            inverse))
+    
+
+    (define (field->ring field)
+      (list-ref field 1))
+
+    (define (field->additive-group ring)
+      (list-ref ring 1))
+
+    (define (field:member? field e)
+      (ring:member? (field->ring field) e))
+
+    (define (field:zero field)
+      (ring:zero (field->ring field)))
+
+    (define (field:add field a b)
+      (ring:add (field->ring field) a b))
+    
+    (define (field:negate field a)
+      (ring:negate (field->ring field) a))
+
+    (define (field:one field)
+      (ring:one (field->ring field)))
+
+    (define (field:multiply field a b)
+      (ring:multiply (field->ring field) a b))
+    
+    (define (field:inverse field a)
+      ((list-ref field 2) a))
+    
+    (define (field->multiplicative-group field)
+      (define (multiplicative-member? a)
+        (if (not (equal? (field:zero field)))
+          (ring:member? (field->ring field) a)))
+      (make-group
+        multiplicative-member? 
+        (field:one field)
+        (field:multiply field)
+        (field:inverse field)))
+
 
     ;;;; Lattice structure
 
