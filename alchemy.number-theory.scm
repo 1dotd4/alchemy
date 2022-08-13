@@ -27,18 +27,22 @@
     ; ;; recall group are closed under * and every element has an inverse.
 
     ;; 1.2.1
-    (define (double-and-add algebraic-structure g n)
-      (if (zero? n)
+    (define (double-and-add algebraic-structure base exponent)
+      (if (zero? exponent)
         (g:identity algebraic-structure)
-        (if (< n 0)
+        (if (< exponent 0)
           (if (g:got-inverse? algebraic-structure)
-            (double-and-add (g:inverse algebraic-structure g) (- n))
-            (error "Dear Cohen, no, I'll use a monoid because I don't have the inverse when I want to power on a ring."))
-          (let rec ((y (g:identity algebraic-structure)) (N n) (z g))
-            (if (zero? N) y
-              (if (odd? N)
-                (rec (g:compose algebraic-structure z y) (quotient N 2) (g:compose algebraic-structure z z))
-                (rec y                                   (quotient N 2) (g:compose algebraic-structure z z))))))))
+            (double-and-add (g:inverse algebraic-structure base) (- exponent))
+            (error "Dear Cohen, no, I'll use a monoid."))
+          (let rec ((result (g:identity algebraic-structure)) (exponent exponent) (composite base))
+            (if (zero? exponent) result
+              (if (odd? exponent)
+                (rec (g:compose algebraic-structure composite result)
+                     (quotient exponent 2) 
+                     (g:compose algebraic-structure composite composite))
+                (rec result
+                     (quotient exponent 2)
+                     (g:compose algebraic-structure composite composite))))))))
 
     (define (square-multiply algebraic-structure g n)
       (double-and-add (ring->multiplicative-monoid algebraic-structure) g n))
