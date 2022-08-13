@@ -1,5 +1,13 @@
 (define-library (alchemy algebra)
-  (export 
+  (export make-set set? set:member? set:cardinality
+          make-monoid monoid? monoid:member? monoid:cardinality monoid:identity monoid:compose
+          monoid->set
+          make-group group? group:member? group:cardinality group:identity group:compose
+          group->monoid
+          make-ring ring? ring:member? ring:cardinality ring:zero ring:add ring:negate ring:one ring:multiply
+          ring->additive-group ring->multiplicative-monoid
+          make-field field? field:member? field:cardinality field:zero field:add field:negate field:one
+          field:multiply field:inverse field->additive-group field->multiplicative-group
           ;;
           )
   (import (scheme base)
@@ -8,6 +16,7 @@
   (begin
     ;; Note: axioms are not proven here
     
+    ;; TODO: easier coercion.
 
     ;;;; Simple structure
 
@@ -17,6 +26,9 @@
         'set
         member?
         cardinality))
+
+    (define (set? set)
+      (equal? 'set (car set)))
 
     (define (set:member? set e)
       ((cadr set) e))
@@ -34,6 +46,9 @@
         (make-set member?)
         identity
         compose))
+
+    (define (monoid? monoid)
+      (equal? 'monoid (car monoid)))
     
     (define (monoid->set monoid)
       (list-ref monoid 1))
@@ -56,6 +71,9 @@
         'group
         (make-monoid member? cardinality identity compose)
         inverse))
+
+    (define (group? group)
+      (equal? 'group (car group)))
 
     (define (group->monoid group)
       (car group))
@@ -84,10 +102,13 @@
     ;; https://mathstrek.blog/2012/10/31/introduction-to-ring-theory-8/
 
     ;;; Ring (group and monoid)
-    (define (make-ring cardinality member? zero add negate one multiply)
+    (define (make-ring member? cardinality zero add negate one multiply)
       (list 'ring
-            (make-group cardinality member? zero add negate)
+            (make-group member? cardinality zero add negate)
             one multiply))
+
+    (define (ring? ring)
+      (equal? 'ring (car ring)))
 
     (define (ring->additive-group ring)
       (list-ref ring 1))
@@ -116,6 +137,13 @@
     (define (ring:inverse ring a)
       ((list-ref ring 4) a))
 
+    (define (ring->multiplicative-monoid ring)
+      (make-monoid
+        (ring:member? ring)
+        (ring:cardinality ring)
+        (ring:one ring)
+        (ring:multiply ring)))
+
 
     ;;; Field (Two groups)
     ; Group<+> + Monoid<*>
@@ -125,6 +153,9 @@
             (make-group member? cardinality zero add negate)
             inverse))
     
+    (define (field? field)
+      (equal? 'field (car field)))
+
     (define (field->ring field)
       (list-ref field 1))
 

@@ -13,27 +13,26 @@
     ; ;; (G, *) a group.
     ; ;; recall group are closed under * and every element has an inverse.
 
-    ; ;; 1.2.1
-    ; (define (right-left-binary group g n)
-    ;   (define identity
-    ;     (group:identity group))
-    ;   (define (inverse g)
-    ;     (group:inverse group g))
-    ;   (define (compose a b)
-    ;     (group:composition group a b))
-    ;   ;; g \in G, n \in Z
-    ;   ;; 1 is the unit
-    ;   (if (zero? n) 1
-    ;     (if (< n 0)
-    ;       (right-left-binary (inverse g) (- n))
-    ;       (let rec ((y identity) (N n) (z g))
-    ;         (if (zero? N) y
-    ;           (if (odd? N)
-    ;             (rec (compose z y) (quotient N 2) (compose z z))
-    ;             (rec y             (quotient N 2) (compose z z))))))))
+    ;; 1.2.1
+    (define (right-left-binary algebraic-structure g n)
+      (let ((monoid (cond
+                      ((monoid? algebraic-structure) algebraic-structure)
+                      ((group? algebraic-structure) (group->monoid algebraic-structure))
+                      ((ring? algebraic-structure) (ring->multiplicative-monoid algebraic-structure))
+                      ((field? algebraic-structure) (group->monoid (field->multiplicative-group algebraic-structure)))
+                      (else (error "Sorry Cohen.")))))
+        (if (zero? n)
+          (monoid:identity monoid)
+          (if (< n 0)
+            (error "Dear Cohen, no, I'll use a monoid because I don't have the inverse when I want to power on a ring.")
+            (let rec ((y (monoid:identity monoid)) (N n) (z g))
+              (if (zero? N) y
+                (if (odd? N)
+                  (rec (monoid:compose monoid z y) (quotient N 2) (monoid:compose monoid z z))
+                  (rec y                           (quotient N 2) (monoid:compose monoid z z)))))))))
 
 
-    ; ;; 1.3.6
+    ;; 1.3.6
     ; (define (xgcd ring a b) ; => (u, v, d)
     ;   (define (ring-zero? a)
     ;     (ring:zero? a)
