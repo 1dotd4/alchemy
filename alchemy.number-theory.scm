@@ -1,8 +1,9 @@
 (define-library (alchemy number-theory)
   (export double-and-add square-multiply
           xgcd
-          integer-ring
-          make-ring-modulo
+          chinese-remainder-theorem
+          integer-ring Z
+          make-integer-ring-modulo ZZn
     sum-of-two-squares? prime? legendreSymbol tonelli phi
           modexpt)
   (import (scheme base)
@@ -14,17 +15,24 @@
     (define (sub1 n) (+ n -1))
 
     (define integer-ring
-      (make-euclidean-ring integer?  'inf
-        0 + - 1 * <))
+      (make-ring integer?  'inf
+        0 + - 1 * quotient <))
 
-    (define (make-ring-modulo n)
+    (define Z integer-ring)
+
+    (define (make-integer-ring-modulo n)
       (make-ring integer? (- n 1)
                  0 (lambda (a b) (modulo (+ a b) n)) (lambda (a) (- n a))
-                 1 (lambda (a b) (modulo (* a b) n))))
+                 1 (lambda (a b) (modulo (* a b) n))
+                 quotient <))
 
-    ; ;;; The Powering Algorithms
-    ; ;; (G, *) a group.
-    ; ;; recall group are closed under * and every element has an inverse.
+    (define (ZZn n) (make-integer-ring-modulo n))
+
+    ;;;; From Cohen
+    ;;; The Powering Algorithms
+    ;; (G, *) a group.
+    ;; recall group are closed under * and every element has an inverse.
+    ;; We may also use monoid for free
 
     ;; 1.2.1
     (define (double-and-add algebraic-structure base exponent)
@@ -57,29 +65,37 @@
         (let rec ((u (r:one ring)) (d a) (v1 (r:zero ring)) (v3 b))
           (if (r:zero? ring v3)
             (list u
-                  (r:quotient ring (r:add ring d (r:negate ring (r:multiply ring a u))) b)
+                  (r:quotient ring (r:subtract ring d (r:multiply ring a u)) b)
                   d)
             (let* ((q  (r:quotient ring d v3))
                    (t3 (r:modulo   ring d v3))
-                   (t1 (r:add ring u (r:negate ring (r:multiply ring q v1)))))
+                   (t1 (r:subtract ring u (r:multiply ring q v1))))
               (rec v1 v3 t1 t3))))))
 
-    ; ;; 1.3.12
-    ; ; note, gcd(mi, mj) = 1 for any pair.
-    ; (define (ctr-inductive xmis) ; (... (xi . mi) ...) => x ≡ xi mod mi for all i
-    ;   (let rec ((m (caar xmis)) (x (cdar xmis)) (rxmis (cdr xmis)))
-    ;     (if (null? rxmis) x
-    ;       (let* ((xmi (car rxmis))
-    ;              (xi (car xmi))
-    ;              (mi (cdr xmi))
-    ;              (r (xgcd-euclid m mi))
-    ;              (u (car r))
-    ;              (v (cadr r))
-    ;              (d (caddr r)))
-    ;         (rec (* m mi) (modulo (+ (* u m xi) (* v mi x)) (* m mi)) (cdr xmis))))))
+    (define (xgcd->u x) (car x))
+    (define (xgcd->v x) (list-ref x 1))
+    (define (xgcd->d x) (list-ref x 2))
+
+    ;; 1.3.12
+    ; note, gcd(mi, mj) = 1 for any pair.
+    (define (chinese-remainder-theorem R xmis) ; (... (xi . mi) ...) => x ≡ xi mod mi for all i
+      (let rec ((x (caar xmis)) (m (cdar xmis)) (rxmis (cdr xmis)))
+        (if (null? rxmis) (cons x m)
+          (let* ((xmi (car rxmis))
+                 (xi (car xmi))
+                 (mi (cdr xmi))
+                 (r (xgcd R m mi))
+                 (u (xgcd->u r))
+                 (v (xgcd->v r))
+                 (d (xgcd->d r)))
+            (rec (r:modulo R
+                           (r:add R (r:multiply R u m xi) (r:multiply R v mi x))
+                           (r:multiply R m mi))
+                 (r:multiply R m mi)
+                 (cdr rxmis))))))
 
     ; ;;; Coninued Fraction Expression of Real Numbers
-    ; ;; x = a0 + (1 / (a1 + (1 / a2 + ...)))
+    ; ;; x = a0 + (1 / (a1 + (1 / (a2 + ...))))
     ; ;; x = [a0, a1, a2, ...]
 
     ; ;; 1.3.13

@@ -27,8 +27,12 @@
                     (+ (* 313 (- p 1)) 1)
                     (+ (* 353 (- p 1)) 1))))))
 
-(steer-observe "xgcd 240 46." (xgcd integer-ring 240 46) '(-9 47 2))
-(steer-observe "5^3 mod 14 = 13." (square-multiply (make-ring-modulo 14) 5 3) 13)
-(steer-observe "3^4 mod 7 = 4" (square-multiply (make-ring-modulo 7) 3 4) 4)
+(steer-observe "xgcd 240 46." (xgcd Z 240 46) '(-9 47 2))
+(steer-observe "5^3 mod 14 = 13." (square-multiply (ZZn 14) 5 3) 13)
+(steer-observe "3^4 mod 7 = 4" (square-multiply (ZZn 7) 3 4) 4)
 
-
+(steer-observe "CTR (1 mod 3) (4 mod 5) (6 mod 7)"
+               (chinese-remainder-theorem
+                 Z
+                 '((1 . 3) (4 . 5) (6 . 7)))
+               '(34 . 105))

@@ -2,9 +2,9 @@
   (export make-set s:member? s:cardinality
           make-monoid make-group g:identity g:compose g:inverse
           g:identity?  g:got-inverse?
-          make-ring r:zero r:add r:negate r:one r:multiply
+          make-ring r:zero r:add r:subtract r:negate r:one r:multiply
           r:zero? r:one?
-          make-euclidean-ring r:euclidean-division r:quotient r:modulo
+          r:quotient r:modulo
           make-field f:inverse
           ring->multiplicative-monoid
           field->multiplicative-group
@@ -48,8 +48,8 @@
     (define (g:identity? a b)
       (equal? (list-ref a 3) b))
 
-    (define (g:compose a b c)
-      ((list-ref a 4) b c))
+    (define (g:compose G a . b)
+      (fold (list-ref G 4) (g:identity G) (cons a b)))
 
     ;;; Group
     (define (make-group member? cardinality identity compose inverse)
@@ -67,10 +67,10 @@
     ;; https://mathstrek.blog/2012/10/31/introduction-to-ring-theory-8/
 
     ;;; Ring (group and monoid)
-    (define (make-ring member? cardinality zero add negate one multiply)
+    (define (make-ring member? cardinality zero add negate one multiply quot less?)
       (make-algebraic-structure member? cardinality
                                 zero add negate
-                                one multiply))
+                                one multiply quot less?))
 
     (define (r:zero a)
       (list-ref a 3))
@@ -78,8 +78,11 @@
     (define (r:zero? a b)
       (equal? (list-ref a 3) b))
 
-    (define (r:add a b c)
-      ((list-ref a 4) b c))
+    (define (r:add R a . b)
+      (fold (list-ref R 4) (r:zero R) (cons a b)))
+
+    (define (r:subtract R a . b)
+      (fold (list-ref R 4) a (map (list-ref R 5) b)))
 
     (define (r:negate a e)
       ((list-ref a 5) e))
@@ -90,42 +93,43 @@
     (define (r:one? a b)
       (equal? (list-ref a 6) b))
 
-    (define (r:multiply a b c)
-      ((list-ref a 7) b c))
+    (define (r:multiply R b . c)
+      (fold (list-ref R 7) (r:one R) (cons b c)))
+
+    (define (r:quotient R a b)
+      ((list-ref R 8) a b))
+
+    (define (r:modulo R a b)
+      (r:subtract R a (r:multiply R b (r:quotient R a b))))
     
-    (define (make-euclidean-ring member? cardinality
-                                 zero add negate
-                                 one multiply
-                                 less?)
-      (make-algebraic-structure member? cardinality
-                                zero add negate
-                                one multiply
-                                less?))
+    ; (define (make-euclidean-ring member? cardinality
+    ;                              zero add negate
+    ;                              one multiply
+    ;                              rem less?)
+    ;   (make-algebraic-structure member? cardinality
+    ;                             zero add negate
+    ;                             one multiply
+    ;                             rem less?))
 
     (define (r:less? r a b)
-      ((list-ref r 8) a b))
+      ((list-ref r 9) a b))
 
-    ;;; NOTE THAT THIS HERE IS INACCURATE
-    (define (r:euclidean-division r a b)
-      (let rec ((rem a) (divisor b) (quot (r:zero r)))
-        (if (r:less? r rem divisor)
-          (cons quot rem)
-          (rec (r:add r rem (r:negate r b))
-               divisor
-               (r:add r quot (r:one r))))))
+    ; ;;; NOTE THAT THIS HERE IS INACCURATE
+    ; (define (r:euclidean-division r a b)
+    ;   (let rec ((rem a) (divisor b) (quot (r:zero r)))
+    ;     (if (r:less? r rem divisor)
+    ;       (cons quot rem)
+    ;       (rec (r:add r rem (r:negate r b))
+    ;            divisor
+    ;            (r:add r quot (r:one r))))))
 
-    (define (r:quotient r a b)
-      (car (r:euclidean-division r a b)))
-
-    (define (r:modulo r a b)
-      (cdr (r:euclidean-division r a b)))
 
     ; XXX
     (define (ring->multiplicative-monoid ring)
       (apply make-monoid
              (append
                (take ring 2)
-               (drop ring 6))))
+               (take (drop ring 6) 2))))
 
     ;;; Field (Two groups)
     ; Group<+> + Monoid<*>
@@ -145,10 +149,10 @@
              (append
                (list multiplicative-member? 
                      multiplicative-cardinality)
-               (drop field 6))))
+               (take (drop field 6) 2))))
 
     (define (f:inverse a b)
-      ((list-ref a 9) b))
+      ((list-ref a 10) b))
 
     ;;;; Lattice structure
 
