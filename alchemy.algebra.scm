@@ -163,7 +163,7 @@
         (- (ring:cardinality (field->ring field)) 1))
       (make-group
         multiplicative-member? 
-        ring:cardinality
+        multiplicative-cardinality
         (field:one field)
         (field:multiply field)
         (field:inverse field)))
