@@ -12,23 +12,23 @@
     ;;;; Simple structure
 
     ;;; Set
-    (define (make-set member?)
+    (define (make-set member? cardinality)
       (list
         'set
-        member?))
+        member?
+        cardinality))
 
     (define (set:member? set e)
       ((cadr set) e))
 
-    ; sure and P = NP
-    ; (define (set:cardinality set)
-    ;   (caddr set))
+    (define (set:cardinality set)
+      (list-ref set 2))
 
 
     ;;;; Group-like structure
 
     ;;; Monoid
-    (define (make-monoid member? identity compose)
+    (define (make-monoid member? cardinality identity compose)
       (list
         'monoid
         (make-set member?)
@@ -41,6 +41,9 @@
     (define (monoid:member? monoid e)
       (set:member? (monoid->set monoid) e))
 
+    (define (monoid:cardinality monoid)
+      (set:cardinality (monoid->set monoid)))
+
     (define (monoid:identity monoid)
       (list-ref monoid 2))
 
@@ -48,10 +51,10 @@
       ((list-ref monoid 3) a b))
 
     ;;; Group
-    (define (make-group member? identity compose inverse)
+    (define (make-group member? cardinality identity compose inverse)
       (list
         'group
-        (make-monoid member? identity compose)
+        (make-monoid member? cardinality identity compose)
         inverse))
 
     (define (group->monoid group)
@@ -62,6 +65,9 @@
 
     (define (group:member? group e)
       (monoid:member? (group->monoid group) e))
+
+    (define (group:cardinality group)
+      (monoid:cardinality (group->monoid group)))
 
     (define (group:identity group)
       (monoid:identity (group->monoid group)))
@@ -78,9 +84,9 @@
     ;; https://mathstrek.blog/2012/10/31/introduction-to-ring-theory-8/
 
     ;;; Ring (group and monoid)
-    (define (make-ring member? zero add negate one multiply)
+    (define (make-ring cardinality member? zero add negate one multiply)
       (list 'ring
-            (make-group member? zero add negate)
+            (make-group cardinality member? zero add negate)
             one multiply))
 
     (define (ring->additive-group ring)
@@ -88,6 +94,9 @@
   
     (define (ring:member? ring e)
       (group:member? (ring->additive-group ring) e))
+
+    (define (ring:cardinality ring)
+      (group:cardinality (ring->additive-group ring)))
 
     (define (ring:zero ring)
       (group:identity (ring->additive-group ring)))
@@ -111,12 +120,11 @@
     ;;; Field (Two groups)
     ; Group<+> + Monoid<*>
     ; = Ring + inverse<*>
-    (define (make-field member? zero add negate one multiply inverse)
+    (define (make-field member? cardinality zero add negate one multiply inverse)
       (list 'field
-            (make-group member? zero add negate)
+            (make-group member? cardinality zero add negate)
             inverse))
     
-
     (define (field->ring field)
       (list-ref field 1))
 
@@ -125,6 +133,9 @@
 
     (define (field:member? field e)
       (ring:member? (field->ring field) e))
+
+    (define (field:cardinality field)
+      (ring:cardinality (field->ring field)))
 
     (define (field:zero field)
       (ring:zero (field->ring field)))
@@ -148,8 +159,11 @@
       (define (multiplicative-member? a)
         (if (not (equal? (field:zero field)))
           (ring:member? (field->ring field) a)))
+      (define multiplicative-cardinality
+        (- (ring:cardinality (field->ring field)) 1))
       (make-group
         multiplicative-member? 
+        ring:cardinality
         (field:one field)
         (field:multiply field)
         (field:inverse field)))
