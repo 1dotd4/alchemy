@@ -1,5 +1,6 @@
 (define-library (alchemy number-theory)
-  (export double-and-add xgcd
+  (export double-and-add square-multiply
+          xgcd
           integer-ring
           make-ring-modulo
     sum-of-two-squares? prime? legendreSymbol tonelli phi
@@ -38,6 +39,9 @@
               (if (odd? N)
                 (rec (g:compose algebraic-structure z y) (quotient N 2) (g:compose algebraic-structure z z))
                 (rec y                                   (quotient N 2) (g:compose algebraic-structure z z))))))))
+
+    (define (square-multiply algebraic-structure g n)
+      (double-and-add (ring->multiplicative-monoid algebraic-structure) g n))
 
     ;; 1.3.6
     (define (xgcd ring a b) ; => (u, v, d)
