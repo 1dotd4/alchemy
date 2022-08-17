@@ -128,7 +128,7 @@
     (define (ring->multiplicative-monoid ring)
       (apply make-monoid
              (append
-               (take ring 2)
+               (take (drop ring 1) 2)
                (take (drop ring 6) 2))))
 
     ;;; Field (Two groups)

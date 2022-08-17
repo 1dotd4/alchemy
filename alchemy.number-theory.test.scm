@@ -27,12 +27,26 @@
                     (+ (* 313 (- p 1)) 1)
                     (+ (* 353 (- p 1)) 1))))))
 
+(steer-observe "gcd 240 46." (gcd Z 240 46) 2)
 (steer-observe "xgcd 240 46." (xgcd Z 240 46) '(-9 47 2))
 (steer-observe "5^3 mod 14 = 13." (square-multiply (ZZn 14) 5 3) 13)
-(steer-observe "3^4 mod 7 = 4" (square-multiply (ZZn 7) 3 4) 4)
+(steer-observe "3^4 mod 7 = 4." (square-multiply (ZZn 7) 3 4) 4)
 
-(steer-observe "CTR (1 mod 3) (4 mod 5) (6 mod 7)"
+(steer-observe "CTR (1 mod 3) (4 mod 5) (6 mod 7)."
                (chinese-remainder-theorem
                  Z
                  '((1 . 3) (4 . 5) (6 . 7)))
                '(34 . 105))
+
+(steer-observe "Order of 5 (Z/6Z)*." (order-of-element (ZZn* 6) 5) 2)
+
+(steer-observe "⌊sqrt(16)⌋." (integer-square-root 16) 4)
+(steer-observe "⌊sqrt(15)⌋." (integer-square-root 15) 3)
+(steer-observe "⌊sqrt(12)⌋." (integer-square-root 12) 3)
+
+(steer-taste "Is 64 square?" (square-test 64))
+(steer-taste "Is 123^2 square?" (square-test (expt 123 2)))
+(steer-taste "Is 3^3 square?" (not (square-test (expt 3 3))))
+
+(steer-taste "Is 7^6 a prime power?" (prime-power-test (expt 7 6)))
+(steer-taste "Is 6^4 a prime power?" (not (prime-power-test (expt 6 4))))

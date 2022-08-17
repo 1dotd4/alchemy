@@ -1,18 +1,29 @@
 (define-library (alchemy number-theory)
   (export double-and-add square-multiply
-          xgcd
+          gcd xgcd
           chinese-remainder-theorem
           integer-ring Z
           make-integer-ring-modulo ZZn
-    sum-of-two-squares? prime? legendreSymbol tonelli phi
-          modexpt)
+          make-unit-group ZZn*
+          sum-of-two-squares? prime? kronecker legendreSymbol tonelli phi
+          order-of-element
+          modexpt
+          factors
+          integer-square-root
+          square-test prime-power-test
+          )
   (import (scheme base)
           (scheme write)
+          (scheme case-lambda)
           (alchemy algebra)
+          (srfi 1)
           (srfi 27))
   (begin
     (define (add1 n) (+ n 1))
     (define (sub1 n) (+ n -1))
+
+    (define (even a) (zero? (modulo a 2)))
+    (define (odd a) (not (even a)))
 
     (define integer-ring
       (make-ring integer?  'inf
@@ -27,6 +38,13 @@
                  quotient <))
 
     (define (ZZn n) (make-integer-ring-modulo n))
+
+    (define (make-unit-group n)
+      (make-group (lambda (a) (and (integer? a) (= 1 (xgcd->d (xgcd a n)))))
+                  (phi n)
+                  1 (lambda (a b) (modulo (* a b) n)) (lambda (a) (xgcd->u (xgcd a n)))))
+
+    (define (ZZn* n) (make-unit-group n))
 
     ;;;; From Cohen
     ;;; The Powering Algorithms
@@ -54,6 +72,18 @@
 
     (define (square-multiply algebraic-structure g n)
       (double-and-add (ring->multiplicative-monoid algebraic-structure) g n))
+
+    ;; 1.3.1
+    (define original-gcd gcd)
+    (define gcd
+      (case-lambda
+        ((a b) (original-gcd a b))
+        ((R a b)
+         (let rec ((a a) (b b))
+           (if (r:zero? R b)
+             a
+             (rec b (r:modulo R a b)))))))
+
 
     ;; 1.3.6
     (define (xgcd ring a b) ; => (u, v, d)
@@ -109,24 +139,24 @@
 
     ; ;; The Legebdre Symbol
 
-    ; ; in (Z/nZ)^*
-    ; 
-    ; ;; 1.4.3
-    ; (define (order-of-element h g)
-    ;   ; G a group
-    ;   ; h cardinality of the group
-    ;   ; g an element of G
-    ;   ; 1 unit element of G
-    ;   (let ((fs (factor h)))
-    ;     (let rec ((e h) (rfs fs))
-    ;       (if (null? rfs) e
-    ;         (let ((ee (/ e (expt (caar rfs) (cdar rfs))))
-    ;               (g1 (expt g ee)))
-    ;           (let rec2 ((gg1 g1) (eee ee))
-    ;             (if (= 1 gg1)
-    ;               (rec ee (cdr rfs))
-    ;               (rec2 (expt g1 (caar rfs))
-    ;                     (* ee (caar rfs))))))))))
+    ;; 1.4.3
+    ;; in (Z/nZ)^*
+    (define (order-of-element G g)
+      ; G a group
+      ; h cardinality of the group
+      ; g an element of G
+      ; 1 unit element of G
+      (let* ((h (s:cardinality G))
+            (fs (factors h)))
+        (let rec ((e h) (rfs fs))
+          (if (null? rfs) e
+            (let* ((ee (/ e (expt (caar rfs) (cdar rfs))))
+                  (g1 (double-and-add G g ee)))
+              (let rec2 ((gg1 g1) (eee ee))
+                (if (= 1 gg1)
+                  (rec eee (cdr rfs))
+                  (rec2 (double-and-add G gg1 (caar rfs))
+                        (* eee (caar rfs))))))))))
 
     ;; 1.4.4
     (define (primitive-root p)
@@ -134,36 +164,40 @@
 
     ;; 1.4.10
     (define (kronecker a b)
-      (error "Not today please"))
-
+      (define (tab2k a)
+        (list-ref '(0 1 0 -1 0 -1 0 1) (modulo a 8)))
+      (if (zero? b)
+        (if (not (= 1 (abs a))) 0 1)
+        (if (and (even? a) (even? b))
+          0
+          (let remove2s-b ((v 0) (b b))
+            (if (even? b)
+              (remove2s-b (add1 v) (quotient b 2))
+              (let ((k (if (even? v) 1 (tab2k a))))
+              (let reciprocity ((k (if (< a 0) (- k) k))
+                                (a a)
+                                (b (if (< b 0) (- b) b)))
+                (cond
+                  ((and (zero? a) (> b 1)) 0)
+                  ((and (zero? a) (= b 1)) k)
+                  (else
+                    (let remove2s-a ((v 0) (a a))
+                      (if (even? a)
+                        (remove2s-a (add1 v) (quotient a 2))
+                        (let ((k (if (odd? v) (* k (tab2k b)) k)))
+                          (reciprocity (* k (if (and (odd? (quotient a 2)) (odd? (quotient b 2))) -1 1))
+                                       (modulo b (abs a))
+                                       (abs a))))))))))))))
 
     ;; The Algorithm of Tonelly and Shanks
 
-    ;; 1.5.1
-    (define (square-root-mod-p a p)
-      (error "copy me from somewhere else"))
-
-    ;; =================================
-    ;; n = a^2 + b^2 => n mod 4 === {0, 1, 2}
-    (define (sum-of-two-squares? n)
-      (member (modulo n 4) '(0 1 2)))
-    ;; TODO: https://wstein.org/edu/2007/spring/ent/ent-html/node75.html
-
-    ;; Legendre Symbol
-    (define (legendreSymbol a p)
-      (let ((power (modexpt a (quotient (- p 1) 2) p)))
-      (if (> power 1)
-          -1
-          power)))
-
-    ;; Tonelli Square root modulo
+    ;; 1.5.1 - Tonelli Square root modulo
     (define (tonelli n p) 
       ;; Step 0. Check that n is indeed square: (n | p) must be ≡ 1
       (letrec ((check (lambda (a p)
                         (if (= (legendreSymbol a p) 1)
                             (setup a p)
                             #f)))
-          
 
               ;; Setup
               ;; Step 1. Factors out powers of 2 from p-1
@@ -191,7 +225,6 @@
                                 (modexpt n q p)
                                 (modexpt n (quotient (add1 q) 2) p)))))
               
-
               ;; Step 4. Loop.
               ;; If t ≡ 1 output r, p-r.
               ;; n p m c t r
@@ -220,6 +253,94 @@
                                     (modulo (* r b)   p)))))))
       ;; Start the tonelli algorithm.
       (check n p)))
+
+    ;; 1.6.1 - Solving Polynomial Equation Modulo p
+    ; (define (roots-mod-p Fp P)
+    ;   ;; p >= 3
+    ;   ;; Fp = Z/pZ
+    ;   ;; P in Fp[X]
+    ;   ;; outputs the roots of P in Fp
+    ;   (let rec ((A (gcd Fp (x^p - x) P)))
+    ;             (roots '()))
+    ;     (if (p:zero? A)
+    ;       (rec (p:quot A X) (cons 0 roots))
+    ;       (cond
+    ;         ((zero? (p:eval A 0)) roots)
+    ;         ((= 1 (p:deg A)) (cons -a0/a1 roots))
+    ;         ((= 2 (p:deg A))
+    ;          (let* ((d (a1 * a1 - 4 * a0 * a2a))
+    ;                 (s (jacobi (d p))))
+    ;            (if (= -1 s)
+    ;              roots
+    ;              (let ((e (tonelli d p)))
+    ;                (append
+    ;                  (list
+    ;                    (/ (-a1 + e) (2*a2))
+    ;                    (/ (-a1 - e) (2*a2)))
+    ;                  roots)))))
+    ;         (else
+    ;           (let* step3 ((a (random in Fp)))
+    ;             (let (B (gcd ((X + a)^{(p-1)/2}) A))
+    ;               (if (or (zero? (p:deg B))
+    ;                       (= (p:deg B) (p:deg A)))
+    ;                 (step3 (random in Fp))
+    ;                 (append
+    ;                   (roots-mod-p Fp B)
+    ;                   (roots-mod-p Fp (p:div A B))
+    ;                   roots))))))))
+
+    ;; 1.7.1
+    (define (integer-square-root n)
+      (let rec ((x n))
+        (let ((y (quotient (+ x (quotient n x)) 2)))
+          (if (< y x)
+            (rec y)
+            x))))
+
+    ;; 1.7.3
+    (define (square-test n)
+      (let ((q11 (map (lambda (t) (>= (kronecker t 11) 0)) (iota 11)))
+            (q63 (map (lambda (t) (>= (kronecker t 63) 0)) (iota 63)))
+            (q64 (map (lambda (t) (>= (kronecker t 64) 0)) (iota 64)))
+            (q65 (map (lambda (t) (>= (kronecker t 65) 0)) (iota 65))))
+        (and
+          (list-ref q64 (modulo n 64))
+          (let ((r (modulo n 45045)))
+            (and
+              (list-ref q63 (modulo r 63))
+              (list-ref q65 (modulo r 65))
+              (list-ref q11 (modulo r 11))
+              (let ((q (integer-square-root n)))
+                (= n (* q q))))))))
+
+    ;; 1.7.4
+    (define (prime-power-test n)
+      (let rec ((a 2))
+        (let* ((b (square-multiply (ZZn n) a n))
+               (p (gcd (- b a) n)))
+          (cond
+            ((= 1 p) #f)
+            ((prime? p)
+             (let try ((n* n))
+               (cond
+                 ((= 1 n*) p)
+                 ((not (zero? (modulo n* p))) #f)
+                 (else (try (quotient n* p))))))
+
+            (else (rec (add1 a)))))))
+
+
+    ;; =================================
+    ;; n = a^2 + b^2 => n mod 4 === {0, 1, 2}
+    (define (sum-of-two-squares? n)
+      (member (modulo n 4) '(0 1 2)))
+    ;; TODO: https://wstein.org/edu/2007/spring/ent/ent-html/node75.html
+
+    ;; Legendre Symbol
+    (define (legendreSymbol a p)
+      (let ((power (modexpt a (quotient (- p 1) 2) p)))
+        (if (> power 1) -1 power)))
+
 
     ;; Note to self, get a factor function and simplify this trivial
     ;; division.
@@ -281,10 +402,16 @@
     (define (factors n)
       (let *factor ((divisor 2) (number n) (factors '()))
         (if (> (* divisor divisor) number)
-          (cons number factors)
+          (if (= 1 number)
+            factors
+            (cons (cons number 1) factors))
           (if (zero? (modulo number divisor))
-            (*factor divisor (quotient number divisor) (cons divisor factors))
+            (let count ((*number number) (i 0))
+              (if (zero? (modulo *number divisor))
+                (count (quotient *number divisor) (+ i 1))
+                (*factor divisor *number (cons (cons divisor i) factors))))
             (*factor (+ 1 divisor) number factors)))))
+
     (define (next-prime n)
       (let rec ((next (+ 1 n)))
         (if (prime? next)
