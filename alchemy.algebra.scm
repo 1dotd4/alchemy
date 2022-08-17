@@ -9,6 +9,10 @@
           ring->multiplicative-monoid
           field->multiplicative-group
           ;;
+          
+          integer-ring Z
+          make-integer-ring-modulo ZZn
+          real-field R
           )
   (import (scheme base)
           (scheme case-lambda)
@@ -164,7 +168,37 @@
 
     ;;; Vector Space
 
+    (define (make-vector-space K V)
+      ; K a field (but can be also a ring tbh)
+      ; V the basis of our vector space
+      (error "YOLO!"))
+
 
     ;;;; Algebra-like structure
+
+    ;;;; Some known structures
+
+    (define integer-ring
+      (make-ring integer?  'inf
+        0 + - 1 * quotient <))
+
+    (define Z integer-ring)
+
+    (define (make-integer-ring-modulo n)
+      (make-ring integer? (- n 1)
+                 0 (lambda (a b) (modulo (+ a b) n)) (lambda (a) (- n a))
+                 1 (lambda (a b) (modulo (* a b) n))
+                 quotient <))
+
+    (define (ZZn n) (make-integer-ring-modulo n))
+
+
+    (define real-field
+      (make-field number? 'inf
+                  0 + - 1 * < (lambda (a) (/ 1 a))))
+
+    (define R real-field)
+
+
 
     ))

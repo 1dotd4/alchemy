@@ -2,15 +2,14 @@
   (export double-and-add square-multiply
           gcd xgcd
           chinese-remainder-theorem
-          integer-ring Z
-          make-integer-ring-modulo ZZn
-          make-unit-group ZZn*
           sum-of-two-squares? prime? kronecker legendreSymbol tonelli phi
           order-of-element
           modexpt
           factors
           integer-square-root
           square-test prime-power-test
+          ;;
+          make-unit-group ZZn*
           )
   (import (scheme base)
           (scheme write)
@@ -21,23 +20,6 @@
   (begin
     (define (add1 n) (+ n 1))
     (define (sub1 n) (+ n -1))
-
-    (define (even a) (zero? (modulo a 2)))
-    (define (odd a) (not (even a)))
-
-    (define integer-ring
-      (make-ring integer?  'inf
-        0 + - 1 * quotient <))
-
-    (define Z integer-ring)
-
-    (define (make-integer-ring-modulo n)
-      (make-ring integer? (- n 1)
-                 0 (lambda (a b) (modulo (+ a b) n)) (lambda (a) (- n a))
-                 1 (lambda (a b) (modulo (* a b) n))
-                 quotient <))
-
-    (define (ZZn n) (make-integer-ring-modulo n))
 
     (define (make-unit-group n)
       (make-group (lambda (a) (and (integer? a) (= 1 (xgcd->d (xgcd a n)))))
