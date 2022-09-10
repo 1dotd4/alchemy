@@ -259,7 +259,12 @@
 
     ; 2.2.2
     (define (matrix-inverse M-orig)
+      ;;; TODO: Remark (1) make it obvious. If B is replaced by any other n x m matrix N you get M^-1 N.
+      ;;;       this means that with m = 1 you can get to solve 2.2.1
+      ;;;       (faster for n > 4 because of n^3 * 3/4 complexity)
       (define n (vector-length M-orig))
+      (if (not (= n (vector-length (vector-ref M))))
+        (error "Not square matrix"))
       (define M (vector-copy M-orig))
       (define C (make-vector n 0))
       (define B (matrix-identity n))
@@ -341,6 +346,16 @@
               ; continue with the next column
               (loop (+ j 1) (+ j 1)))))))
 
+    ; 2.2.3
+    ;; using elimination
+    (define (matrix-determinat M)
+      ; check square
+      (define n (vector-length M))
+      (if (not (= n (vector-length (vector-ref M))))
+        (error "Not square matrix"))
+      (define C (make-vector n 0))
+      ;; more swaps..
+      )
 
 
 
