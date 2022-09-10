@@ -3,6 +3,7 @@
 (load "version.scm")
 (load "helper.scm")
 (load "alchemy.cauldron.scm")
+(load "alchemy.language.scm")
 (load "alchemy.algebra.scm")
 (load "alchemy.number-theory.scm")
 (load "alchemy.linear-algebra.scm")

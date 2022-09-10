@@ -13,6 +13,7 @@
   (import (scheme base)
           (scheme write)
           (scheme case-lambda)
+          (alchemy language)
           (alchemy algebra)
           (srfi 1)
           (srfi 27))
@@ -170,7 +171,16 @@
       (let ((l (vector-length va)))
         (if (not (= l (vector-length vb)))
           (error "Different lengths inner product" va vb)
-          (v-sum (v-binary * va vb)))))
+          ((a:compose
+             (a:fold + 0)
+             (a:map
+               (a:compose
+                 (a:fold * 1)
+                 vector->list))
+             vector->list
+             transpose)
+           (vector va vb)))))
+          ; (v-sum (v-binary * va vb)))))
 
     (define (matrix-multiplication A B)
       (let* ((ra (vector-length (vector-ref A 0)))
@@ -263,7 +273,7 @@
       ;;;       this means that with m = 1 you can get to solve 2.2.1
       ;;;       (faster for n > 4 because of n^3 * 3/4 complexity)
       (define n (vector-length M-orig))
-      (if (not (= n (vector-length (vector-ref M))))
+      (if (not (= n (vector-length (vector-ref M-orig 0))))
         (error "Not square matrix"))
       (define M (vector-copy M-orig))
       (define C (make-vector n 0))
