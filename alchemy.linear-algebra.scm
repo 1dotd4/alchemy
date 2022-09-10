@@ -6,6 +6,9 @@
     v-pp
     square-linear-system
     rho
+    matrix-identity
+    matrix-inverse
+    matrix-multiplication
     transpose)
   (import (scheme base)
           (scheme write)
@@ -56,6 +59,13 @@
         (vector-set! matrix j tmp)
         matrix))
 
+    (define (ma-swap-rows! matrix i j)
+      (let ((tmp (transpose matrix)))
+        (ma-swap-col! tmp i j)
+        (set! matrix tmp)
+        matrix))
+
+
     (define (ma-swap! A ai aj bi bj)
       (let ((tmp (ma A ai aj)))
         (ma-set! A ai aj (ma A bi bj))
@@ -74,7 +84,7 @@
                   (display (number->string (ma A i j)))
                   (if (= columns (+ 1 j)) 
                     (if (= rows (+ 1 i))
-                      (display "]\n")
+                      (display " ]\n")
                       (display ",\n  "))
                     (display ",\t"))))
               (iota columns)))
@@ -105,54 +115,76 @@
         (vector-set! v j tmp)
         v))
 
-;     ;; 2.2.1
-;     (define (square-linear-system M B)
-;       (let ((n (vector-length A))
-;             (C (make-vector n)))
-;       ;; M is nxn
-; 
-;       (define (find-non-zero-i A j)
-;         (let rec ((i j))
-;           (cond
-;             ((= n i) #f)
-;             ((zero? (ma A i j)) (rec (+ 1 i)))
-;             (else i))))
-;       (define (swap-step! A i j)
-;         (map
-;           (lambda (l)
-;             (ma-swap! A i l j l))
-;           (range j n)))
-;       (define (divide-row! A i j)
-;         (let ((C (make-vector n)))
-;           (map
-;             (lambda (l)
-;               )
-;             (range j n))))
-; 
-;       (let rec ((j 0))
-;         (if (> j n)
-;           (solve-triangular M B)
-;           (let ((i (find-non-zero-i M j)))
-;             (if (not i)
-;               #f
-;               (begin
-;                 ;; swap if needed
-;                 (if (> i j)
-;                   (begin
-;                     (swap-step! M i j)
-;                     (vector-swap! B i j)))
-;                 ;; eliminate
-;                 (let ((d (/ 1 (ma M j j))))
-;                   (map ... fill my C )
-;                   (map
-;                     (lambda (k)
-;                       (map
-;                         (lambda (l)
-; 
-;                           )
-;                         (range ?? n)) ;; columns
-;                       (vector-set! B k ??))
-;                     (range ?? n))) ; rows
+    (define matrix-zero
+      (case-lambda
+        ((n) (matrix-zero n n))
+        ((n m)
+         (let ((I (rho n m (iota (* n m)))))
+           (do ((i 0 (+ i 1)))
+             ((= i n) I)
+             (do ((j 0 (+ j 1)))
+               ((= j m) '())
+               (ma-set! I i j 0)))))))
+
+    (define (matrix-identity n)
+      (let ((I (rho n n (iota (* n n)))))
+        (do ((i 0 (+ i 1)))
+          ((= i n) I)
+          (do ((j 0 (+ j 1)))
+            ((= j n) '())
+            (ma-set! I i j (if (= i j) 1 0))))))
+
+    (define (ma-col A j) (vector-ref A j))
+    (define (ma-row A j) (vector-ref (transpose A) j))
+
+    (define (ma-row-set! A j row)
+      (let ((l (vector-length row)))
+        (if (not (= l (vector-length A)))
+          (error "Different length for matrix and row vector" A row)
+          (do ((i 0 (+ i 1)))
+            ((= i l) A)
+            (ma-set! A j i (vector-ref row i))))))
+
+    (define (scalar-multiplication s v)
+      (let* ((lv (vector-length v))
+             (vo (make-vector lv)))
+        (do ((i 0 (+ i 1)))
+          ((= i lv) vo)
+          (vector-set! vo i (* (vector-ref v i) s)))))
+
+    (define (v-sum v) (fold + 0 (vector->list v)))
+
+    (define (v-binary binary-operation va vb)
+      (let* ((la (vector-length va))
+             (lb (vector-length vb))
+             (vo (make-vector la)))
+        (if (not (= la lb))
+          (error "Different lengths" la lb)
+          (do ((i 0 (+ i 1)))
+            ((= i la) vo)
+            (vector-set! vo i (binary-operation
+                                (vector-ref va i)
+                                (vector-ref vb i)))))))
+
+    (define (inner-product va vb)
+      (let ((l (vector-length va)))
+        (if (not (= l (vector-length vb)))
+          (error "Different lengths inner product" va vb)
+          (v-sum (v-binary * va vb)))))
+
+    (define (matrix-multiplication A B)
+      (let* ((ra (vector-length (vector-ref A 0)))
+             (ca (vector-length A))
+             (rb (vector-length (vector-ref B 0)))
+             (cb (vector-length B))
+             (AB (matrix-zero ra cb)))
+        (if (not (= ca rb))
+          (error "Can't multiply those matrices" A B)
+          (do ((i 0 (+ i 1)))
+            ((= i ra) AB)
+            (do ((j 0 (+ j 1)))
+              ((= j cb) '())
+              (ma-set! AB i j (inner-product (ma-row A i) (ma-col B j))))))))
 
 
     ;; 2.2.1
@@ -167,6 +199,7 @@
           ; solve linear system
           [(= j n)
            ; Here M is an upper triangular matrix
+           (begin
            (do ((i (- n 1) (- i 1)))
              ((< i 0) X)
              (vector-set! X i
@@ -175,7 +208,7 @@
                                   (lambda (j s) (+ s (* (ma M i j) (vector-ref X j))))
                                   0
                                   (range i n)))
-                             (ma M i i))))]
+                             (ma M i i)))))]
           ; 3. all zero entry
           [(= n i)
            (begin
@@ -220,6 +253,91 @@
                              (- (vector-ref B k)
                                 (* (vector-ref C k)
                                    (vector-ref B j)))))
+              ; continue with the next column
+              (loop (+ j 1) (+ j 1)))))))
+
+
+    ; 2.2.2
+    (define (matrix-inverse M-orig)
+      (define n (vector-length M-orig))
+      (define M (vector-copy M-orig))
+      (define C (make-vector n 0))
+      (define B (matrix-identity n))
+      (define X (matrix-zero n))
+      (let loop ((j 0) (i 0))
+        (cond
+          ; solve triangular system
+          [(= j n)
+           ; Here M is an upper triangular matrix
+           (begin
+             (do ((i (- n 1) (- i 1)))
+               ((< i 0) X)
+               (ma-row-set!
+                 X i
+                 (scalar-multiplication
+                   (/ 1 (ma M i i))
+                   (v-binary
+                     -
+                     (ma-row B i)
+                     (fold
+                       (lambda (j s)
+                         (v-binary
+                           +
+                           s 
+                           (scalar-multiplication
+                             (ma M i j)
+                             (ma-row X j))))
+                       (make-vector n 0)
+                       (range (+ 1 i) n)))))))]
+          ; 3. all zero entry
+          [(= n i)
+           (begin
+             (ma-pp M)
+             (error "Not invertible matrix!"))]
+          ; 3. find non-zero entry
+          [(zero? (ma M i j)) (loop j (+ 1 i))]
+          ; coninue
+          (else
+            (begin
+              ; 4. Swap?
+              (if (> i j)
+                (begin
+                  (display "I need to swap!")
+                  (do ((l j (+ l 1)))
+                    ((= l n) '())
+                    (ma-swap! M i l j l))
+                  (ma-swap-rows! B i j)))
+              ; 5. elminiate from M[j,j]
+              ; Get the pivot inverse and apply to current columnt that will be propagated
+              (let ((d (/ 1 (ma M j j))))
+                (do ((k (+ j 1) (+ k 1)))
+                  ((= k n) '())
+                  (vector-set! C k (* d (ma M k j)))))
+              ; >"Note that we do no need to compute this"
+              ; Yeah but if you don't say I have to set it...
+              (do ((k (+ j 1) (+ k 1)))
+                ((= k n) '())
+                (ma-set! M k j 0))
+              ; Loop to eliminate on matrix
+              (do ((k (+ j 1) (+ k 1)))
+                ((= k n) '())
+                (do ((l (+ j 1) (+ l 1)))
+                  ((= l n) '())
+                  (ma-set! M k l (- (ma M k l)
+                                    (* (vector-ref C k)
+                                       (ma M j l))))))
+              ; Loop to propagate on the constants matrix
+              (do ((k (+ j 1) (+ k 1)))
+                ((= k n) '())
+                (ma-row-set!
+                  B
+                  k
+                  (v-binary
+                    -
+                    (ma-row B k)
+                    (scalar-multiplication
+                      (vector-ref C k)
+                      (ma-row B j)))))
               ; continue with the next column
               (loop (+ j 1) (+ j 1)))))))
 
