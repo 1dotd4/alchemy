@@ -55,4 +55,14 @@
   (matrix-inverse
     (rho 1 1 '(7))))
 
+(print
+  (matrix-determinat
+    (rho 1 1 '(7))))
 
+(print
+  (matrix-determinat
+    (rho 2 2 '(2 3 4 5))))
+
+(print
+  (matrix-determinat
+    (rho 3 3 '(2 3 4 5 6 7 8 9 0))))

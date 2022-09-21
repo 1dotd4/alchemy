@@ -9,6 +9,7 @@
     matrix-identity
     matrix-inverse
     matrix-multiplication
+    matrix-determinat
     transpose)
   (import (scheme base)
           (scheme write)
@@ -232,7 +233,6 @@
               ; 4. Swap?
               (if (> i j)
                 (begin
-                  (display "I need to swap!")
                   (do ((l j (+ l 1)))
                     ((= l n) '())
                       (ma-swap! M i l j l))
@@ -317,7 +317,6 @@
               ; 4. Swap?
               (if (> i j)
                 (begin
-                  (display "I need to swap!")
                   (do ((l j (+ l 1)))
                     ((= l n) '())
                     (ma-swap! M i l j l))
@@ -357,15 +356,64 @@
               (loop (+ j 1) (+ j 1)))))))
 
     ; 2.2.3
-    ;; using elimination
+    ;; using ordinary elimination
     (define (matrix-determinat M)
       ; check square
       (define n (vector-length M))
-      (if (not (= n (vector-length (vector-ref M))))
+      (if (not (= n (vector-length (vector-ref M 0))))
         (error "Not square matrix"))
       (define C (make-vector n 0))
       ;; more swaps..
-      )
+      (let loop ((j 0) (i 0) (x 1))
+        (cond
+          ; 2. Finished?
+          [(= j n) x]
+          ; 3. Found all zero entry
+          [(= i n) 0]
+          ; 3. Find non-zero entry
+          [(zero? (ma M i j)) (loop j (+ 1 i))]
+          ; 4. swap?
+          [(> i j)
+                (begin
+                  (do ((l j (+ l 1)))
+                    ((= l n) '())
+                    (ma-swap! M i l j l))
+                  (loop j j (- x)))]
+          [else
+            (begin
+              ; 5. elminiate from M[j,j]
+              ; Get the pivot inverse and apply to current columnt that will be propagated
+              (let ((d (/ 1 (ma M j j))))
+                (do ((k (+ j 1) (+ k 1)))
+                  ((= k n) '())
+                  (vector-set! C k (* d (ma M k j)))))
+              ; >"Note that we do no need to compute this"
+              ; Yeah but if you don't say I have to set it...
+              (do ((k (+ j 1) (+ k 1)))
+                ((= k n) '())
+                (ma-set! M k j 0))
+              ; Loop to eliminate on matrix
+              (do ((k (+ j 1) (+ k 1)))
+                ((= k n) '())
+                (do ((l (+ j 1) (+ l 1)))
+                  ((= l n) '())
+                  (ma-set! M k l (- (ma M k l)
+                                    (* (vector-ref C k)
+                                       (ma M j l))))))
+              ; continue with the next column
+              (loop (+ j 1) (+ j 1) (* x (ma M j j))))])))
+
+    ;; 2.2.6 Determinant using Gauss Bareiss on a matrix M with coefficient in an integral domain R.
+
+    ;; 2.2.7 Characteristic Polynomial and Adjoint Matrix
+
+    ;; 2.2.9 Hessenberg
+
+    ;; 2.3.1 Kernel of a Matrix
+    ;;;;;;;;;;;;;;;;;;;;;;;; YOU ARE HERE!
+    
+    ;; 2.3.2 Image of a Matrix
+
 
 
 
