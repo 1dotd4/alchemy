@@ -414,6 +414,20 @@
     
     ;; 2.3.2 Image of a Matrix
 
+    ;; ...
+
+    ;; 2.4.14 Smith Normal Form
+    ;; 2.6.3 LLL Algorithm
+    ;; 2.6.4 LLL Algorithm with Deep Insertions
+    ;; 2.6.7 Integral LLL Algorithm
+    ;; 2.6.8 LLL Algorithm on Not Necessarily Independant Vectors
+    ;; 2.7.1 Kernel and Image of a Matrix Using LLL
+    ;; 2.7.2 Kernel over Z Using LLL
+    ;; 2.7.4 Linear Dependence
+    ;; 2.7.5 Short vectors
+    ;; 2.7.6 Cholesky Decomposition
+    ;; 2.7.7 Fincke-Pohst
+
 
 
 
