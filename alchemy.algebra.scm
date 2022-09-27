@@ -76,11 +76,11 @@
                                 zero add negate
                                 one multiply quot less?))
 
-    (define (r:zero a)
-      (list-ref a 3))
+    (define (r:zero R)
+      (list-ref R 3))
 
-    (define (r:zero? a b)
-      (equal? (list-ref a 3) b))
+    (define (r:zero? R b)
+      (equal? (list-ref R 3) b))
 
     (define (r:add R a . b)
       (fold (list-ref R 4) (r:zero R) (cons a b)))
@@ -88,11 +88,11 @@
     (define (r:subtract R a . b)
       (fold (list-ref R 4) a (map (list-ref R 5) b)))
 
-    (define (r:negate a e)
-      ((list-ref a 5) e))
+    (define (r:negate R e)
+      ((list-ref R 5) e))
 
-    (define (r:one a)
-      (list-ref a 6))
+    (define (r:one R)
+      (list-ref R 6))
 
     (define (r:one? a b)
       (equal? (list-ref a 6) b))

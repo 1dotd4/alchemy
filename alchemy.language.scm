@@ -1,7 +1,9 @@
 (define-library (alchemy language)
   (export 
     define-curried
-    a:compose
+    compose
+    ; compose-n
+    applify
     a:map
     a:fold
     )
@@ -19,16 +21,41 @@
     ;; Scheme has already the primitive functions to work but lacks of flexible forms.
     ;; We introduce here functional forms as macros for our programs.
 
+    ; (define compose
+    ;   (case-lambda
+    ;     ((f g)
+    ;      (lambda args
+    ;        (call-with-values
+    ;          (lambda ()
+    ;            (apply g args))
+    ;          f)))
+    ;     ((f . g)
+    ;      (lambda args
+    ;        (call-with-values
+    ;          (lambda ()
+    ;            (apply (apply compose g) args))
+    ;          f)))))
+
+    (define (compose . fns)
+      (define (binary-composition f g)
+        (lambda args
+          (call-with-values
+            (lambda () (apply g args))
+            f)))
+      (define identity (lambda x (apply values x)))
+      (fold-right binary-composition identity fns))
 
     ;; 1. composition
     ; (f o g):x = f:(g:x)
-    (define (a:compose . fns)
-      (lambda (x)
-        (let internal ((r x) (fns (reverse fns)))
-          (if (null? fns)
-            r
-            (internal ((car fns) r) (cdr fns))))))
-    ; Can it be multivariate?
+    ; (define compose-n
+    ;   (case-lambda
+    ;     ((f g)
+    ;      (lambda args
+    ;        (f (apply g args))))
+    ;     ))
+  ;       ((f . fns)
+  ;         (lambda args
+  ;           (f ((apply compose-n fns) args))))))
 
     ;; 2. construction
     ; [f1, ..., fn]:x = <f1:x, ..., fn:x>
@@ -47,11 +74,17 @@
 
     ;; 6. apply to all - aka better map
     (define-curried (a:map fn ls) (map fn ls))
+    ; (define-curried (a:map fn . ls) (apply map fn ls))
 
     ;; 7. binary to unary - aka currying
     ; see define-curried
 
     ;; 8. while
     ; already have
+
+    (define applify
+      (lambda args
+        (lambda x
+          (apply apply (append args x)))))
 
     ))

@@ -172,15 +172,21 @@
       (let ((l (vector-length va)))
         (if (not (= l (vector-length vb)))
           (error "Different lengths inner product" va vb)
-          ((a:compose
-             (a:fold + 0)
-             (a:map
-               (a:compose
-                 (a:fold * 1)
-                 vector->list))
-             vector->list
-             transpose)
-           (vector va vb)))))
+          ((compose
+             (applify +)
+             (applify map *))
+           (map vector->list (list va vb))))))
+          ; ((compose
+          ;    +
+          ;    (lambda (a) (apply map * 
+          ;    (a:fold + 0)
+          ;    (a:map
+          ;      (a:compose
+          ;        (a:fold * 1)
+          ;        vector->list))
+          ;    vector->list
+          ;    transpose)
+          ;  (list va vb)))))
           ; (v-sum (v-binary * va vb)))))
 
     (define (matrix-multiplication A B)

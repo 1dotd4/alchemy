@@ -7,6 +7,7 @@
 (load "alchemy.algebra.scm")
 (load "alchemy.number-theory.scm")
 (load "alchemy.linear-algebra.scm")
+(load "alchemy.polynomials.scm")
 (load "alchemy.encoding.scm")
 (load "alchemy.cipher.scm")
 (load "alchemy.cryptanalysis.scm")
