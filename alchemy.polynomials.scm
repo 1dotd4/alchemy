@@ -9,6 +9,7 @@
     poly+
     poly-
     poly-by-scalar
+    poly*
     )
   (import (scheme base)
           (scheme write)
@@ -95,6 +96,37 @@
                (make-list (+ 1 degree) R)
                (make-list (+ 1 degree) k)
                (get-coeffs f)))))
+
+    ; Polynomial multiplication
+    (define (poly* f g)
+      (if (not (eq? (get-ring f) (get-ring g)))
+        (error "Cannot perform polynomial addition on different rings (yet)"))
+      (let ((R (get-ring f))
+            (d (+ 1 1 (poly-degree f) (poly-degree g))))
+        (make-poly
+          R
+          (map
+            (lambda (k)
+              ((compose
+                 (applify +)
+                 (applify map *))
+               (list
+                 (take (coeffs-fix-length (get-coeffs f) k) k)
+                 (reverse (take (coeffs-fix-length (get-coeffs g) k) k)))))
+            (range 1 d)))))
+
+    ; (apply 
+    ;   map
+    ;   (lambda (i x)
+    ;     (apply
+    ;       +
+    ;       (apply map *
+    ;              (make-list (- (+ 1 k) i) x)
+    ;              (get-coeffs g))))
+    ;   (zip
+    ;     (iota k)
+    ;     (get-coeffs f))))))
+
 
 
 

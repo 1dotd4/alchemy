@@ -1,5 +1,6 @@
 (define-library (alchemy algebra)
-  (export make-set s:member? s:cardinality
+  (export range cartesian-product
+          make-set s:member? s:cardinality
           make-monoid make-group g:identity g:compose g:inverse
           g:identity?  g:got-inverse?
           make-ring r:zero r:add r:subtract r:negate r:one r:multiply
@@ -19,6 +20,22 @@
           (srfi 1)
           )
   (begin
+  ;; PLEASE MOVE THOSE
+
+    ;; TODO: move this somewhere else
+    (define (cartesian-product xs ys)
+        (if (or (zero? (length xs)) (zero? (length ys)))
+          '()
+          (fold append '() (map (lambda (x) (map (lambda (y) (list x y)) ys)) xs))))
+
+    ;; [i , j)
+    ;; 3 4 5 6
+    ;; 0 1 2 3
+    ;; => 4
+    (define (range i j)
+      (iota (- j i) i 1))
+
+
     ;; Note: axioms are not proven here
     
     ;; TODO: easier coercion.

@@ -1,6 +1,5 @@
 (define-library (alchemy linear-algebra)
   (export 
-    range
     ma-swap-col!
     ma-pp
     v-pp
@@ -19,19 +18,6 @@
           (srfi 1)
           (srfi 27))
   (begin
-
-    ;; TODO: move this somewhere else
-    (define (cartesian-product xs ys)
-        (if (or (zero? (length xs)) (zero? (length ys)))
-          '()
-          (fold append '() (map (lambda (x) (map (lambda (y) (list x y)) ys)) xs))))
-
-    ;; [i , j)
-    ;; 3 4 5 6
-    ;; 0 1 2 3
-    ;; => 4
-    (define (range i j)
-      (iota (- j i) i 1))
 
     (define (v-swap! vec i j)
       (let ((t (vector-ref vec i)))
