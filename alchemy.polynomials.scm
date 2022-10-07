@@ -10,6 +10,8 @@
     poly-
     poly-by-scalar
     poly*
+
+    poly-euclidean-division
     )
   (import (scheme base)
           (scheme write)
@@ -25,6 +27,9 @@
     ;; dense representation
     ;; sparse representation
 
+    (define (remove-leading-zeros coeffs)
+      (reverse (drop-while zero? (reverse coeffs))))
+
     (define-record-type <polynomial>
       (make-poly ring coeffs)
       polynomial?
@@ -35,6 +40,7 @@
       (- (length (get-coeffs f)) 1))
 
     (define (poly->string f)
+      ;; TODO clean this
       (string-append
         "Polynomial: "
         (apply
@@ -43,15 +49,24 @@
             (map 
               (lambda (z)
                 (string-append
-                  (number->string (cadr z))
-                  "x^"
-                  (number->string (car z))
+                  (if (> (cadr z) 1)
+                    (number->string (cadr z))
+                    "")
+                  "x"
+                  (if (> (car z) 1)
+                    (string-append
+                      "^"
+                      (number->string (car z)))
+                    "")
                   " + "))
               (zip
                 (reverse (iota (poly-degree f) 1 1))
                 (reverse (drop (get-coeffs f) 1))))
             (list (number->string (car (get-coeffs f))))))
         "\n"))
+
+    (define (leading-coefficient f)
+      (last (get-coeffs f)))
 
     ;; Polynomial basic operations:
     ;; - addition
@@ -69,10 +84,11 @@
               (degree (max (poly-degree A) (poly-degree B))))
           (make-poly
             R
-            (map r:add
-                 (make-list (+ 1 degree) R)
-                 (coeffs-fix-length (get-coeffs A) degree)
-                 (coeffs-fix-length (get-coeffs B) degree)))))
+            (remove-leading-zeros
+              (map r:add
+                   (make-list (+ 1 degree) R)
+                   (coeffs-fix-length (get-coeffs A) degree)
+                   (coeffs-fix-length (get-coeffs B) degree))))))
       (fold internal-add f gs))
 
     (define (poly-negate f)
@@ -100,20 +116,21 @@
     ; Polynomial multiplication
     (define (poly* f g)
       (if (not (eq? (get-ring f) (get-ring g)))
-        (error "Cannot perform polynomial addition on different rings (yet)"))
+        (error "Cannot perform polynomial multiplication on different rings (yet)"))
       (let ((R (get-ring f))
             (d (+ 1 1 (poly-degree f) (poly-degree g))))
         (make-poly
           R
-          (map
-            (lambda (k)
-              ((compose
-                 (applify +)
-                 (applify map *))
-               (list
-                 (take (coeffs-fix-length (get-coeffs f) k) k)
-                 (reverse (take (coeffs-fix-length (get-coeffs g) k) k)))))
-            (range 1 d)))))
+          (remove-leading-zeros
+            (map
+              (lambda (k)
+                ((compose
+                   (applify +)
+                   (applify map *))
+                 (list
+                   (take (coeffs-fix-length (get-coeffs f) k) k)
+                   (reverse (take (coeffs-fix-length (get-coeffs g) k) k)))))
+              (range 1 d))))))
 
     ; (apply 
     ;   map
@@ -127,6 +144,29 @@
     ;     (iota k)
     ;     (get-coeffs f))))))
 
+
+    ; 3.1.1
+    (define (poly-euclidean-division A B)
+      (if (not (eq? (get-ring A) (get-ring B)))
+        (error "Cannot perform polynomial division on different rings (yet)"))
+      ; note A, B \in K[x] where K a field or division make sense
+      (let ((ring (get-ring A)))
+        (let rec ((Q (make-poly ring '(0)))
+                  (R A))
+          (cond
+            [(< (poly-degree R) (poly-degree B))
+             (list Q R)]
+            [else
+              (let ((S (make-poly
+                         ring
+                         (append
+                           (make-list (- (poly-degree R) (poly-degree B)) 0)
+                           (list (/ (leading-coefficient R)
+                                    (leading-coefficient B)))))))
+                (rec (poly+ Q S)
+                     ; note not simply poly* but a scalar and then shift
+                     ; try to optimize.
+                     (poly- R (poly* S B))))]))))
 
 
 

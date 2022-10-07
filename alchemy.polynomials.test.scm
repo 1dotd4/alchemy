@@ -51,3 +51,10 @@
 ; (3x + 1) * (5x^2 + 2x + 1)
 ; = 15x^3 + 6x^2 + 3x + 5x^2 + 2x + 1
 ; = 15x^3 + 11x^2 + 5x + 1
+
+(display
+  (poly->string
+    (car
+      (poly-euclidean-division
+        (make-poly R '(-4 0 -2 1))
+        (make-poly R '(-3 1))))))
