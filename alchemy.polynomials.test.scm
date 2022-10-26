@@ -58,3 +58,22 @@
       (poly-euclidean-division
         (make-poly R '(-4 0 -2 1))
         (make-poly R '(-3 1))))))
+
+(display
+  (poly->string
+    (car (poly-euclidean-division
+      (make-poly R '(5/2 1))
+      (make-poly R '(6))))))
+
+(display
+  (poly->string
+    (poly-gcd
+      (make-poly R '(0 1 1))
+      (make-poly R '(6 1)))))
+
+(display
+  (poly->string
+    (poly-gcd
+      (make-poly R '(6 7 1))
+      (make-poly R '(-6 -5 1)))))
+

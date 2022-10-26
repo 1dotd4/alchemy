@@ -155,10 +155,10 @@
     ;;; Field (Two groups)
     ; Group<+> + Monoid<*>
     ; = Ring + inverse<*>
-    (define (make-field member? cardinality zero add negate one multiply less? inverse)
+    (define (make-field member? cardinality zero add negate one multiply quot less? inverse)
       (make-algebraic-structure member? cardinality
                                 zero add negate
-                                one multiply less? inverse))
+                                one multiply quot less? inverse))
 
     (define (field->multiplicative-group field)
       (define (multiplicative-member? a)
@@ -172,8 +172,8 @@
                      multiplicative-cardinality)
                (take (drop field 6) 2))))
 
-    (define (f:inverse a b)
-      ((list-ref a 10) b))
+    (define (f:inverse F b)
+      ((list-ref F 10) b))
 
     ;;;; Lattice structure
 
@@ -212,7 +212,7 @@
 
     (define real-field
       (make-field number? 'inf
-                  0 + - 1 * < (lambda (a) (/ 1 a))))
+                  0 + - 1 * quotient < (lambda (a) (/ 1 a))))
 
     (define R real-field)
 

@@ -21,4 +21,7 @@
         (alchemy encoding)
         (alchemy cipher)
         (alchemy cryptanalysis)
+        (scheme repl)
         )
+
+(interaction-environment)

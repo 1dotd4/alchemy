@@ -12,6 +12,8 @@
     poly*
 
     poly-euclidean-division
+    poly-gcd
+    make-polynomial-ring-over-field
     )
   (import (scheme base)
           (scheme write)
@@ -19,6 +21,7 @@
           (alchemy language)
           (alchemy algebra)
           (srfi 1)
+          (srfi 9)
           (srfi 27))
   (begin
 
@@ -28,7 +31,10 @@
     ;; sparse representation
 
     (define (remove-leading-zeros coeffs)
-      (reverse (drop-while zero? (reverse coeffs))))
+      (let ((maybe-new-coeffs (reverse (drop-while zero? (reverse coeffs)))))
+        (if (null? maybe-new-coeffs)
+          '(0)
+          maybe-new-coeffs)))
 
     (define-record-type <polynomial>
       (make-poly ring coeffs)
@@ -37,33 +43,53 @@
       (coeffs get-coeffs set-coeffs!))
 
     (define (poly-degree f)
-      (- (length (get-coeffs f)) 1))
+      (if (and (zero? (car (get-coeffs f)))
+               (= 1 (length (get-coeffs f))))
+        -1
+        (- (length (get-coeffs f)) 1)))
 
+    ; (set! (record-printer <polynomial>)
     (define (poly->string f)
-      ;; TODO clean this
+    ;   ;;(lambda (record port)
+    ;   ;; TODO clean this
+    ;   ; (display
       (string-append
         "Polynomial: "
-        (apply
-          string-append
-          (append
-            (map 
-              (lambda (z)
-                (string-append
-                  (if (> (cadr z) 1)
-                    (number->string (cadr z))
-                    "")
-                  "x"
-                  (if (> (car z) 1)
-                    (string-append
-                      "^"
-                      (number->string (car z)))
-                    "")
-                  " + "))
-              (zip
-                (reverse (iota (poly-degree f) 1 1))
-                (reverse (drop (get-coeffs f) 1))))
-            (list (number->string (car (get-coeffs f))))))
-        "\n"))
+        (if (< (poly-degree f) 0)
+          "0"
+          (apply
+            string-append
+            (append
+              (map 
+                (lambda (z)
+                  (string-append
+                    (if (not (or (zero? (cadr z))
+                                 (= 1 (cadr z))))
+                      (number->string (cadr z))
+                      "")
+                    "x"
+                    (if (> (car z) 1)
+                      (string-append
+                        "^"
+                        (number->string (car z)))
+                      "")
+                    " + "))
+                (zip
+                  (reverse (iota (poly-degree f) 1 1))
+                  (reverse (drop (get-coeffs f) 1))))
+              (list (number->string (car (get-coeffs f)))))))
+        "\n")
+    ;   ; port)))
+       )
+    ; (define (poly->string f)
+    ;   (string-append
+    ;     "Polynomial: "
+    ;     (apply
+    ;       string-append
+    ;       (concatenate
+    ;       (map (lambda (x) (list " " x))
+    ;         (map number->string (get-coeffs f)))))
+    ;     "\n"))
 
     (define (leading-coefficient f)
       (last (get-coeffs f)))
@@ -150,25 +176,55 @@
       (if (not (eq? (get-ring A) (get-ring B)))
         (error "Cannot perform polynomial division on different rings (yet)"))
       ; note A, B \in K[x] where K a field or division make sense
-      (let ((ring (get-ring A)))
-        (let rec ((Q (make-poly ring '(0)))
+      (let ((field (get-ring A)))
+        (let rec ((Q (make-poly field '(0)))
                   (R A))
           (cond
             [(< (poly-degree R) (poly-degree B))
              (list Q R)]
             [else
               (let ((S (make-poly
-                         ring
+                         field
                          (append
                            (make-list (- (poly-degree R) (poly-degree B)) 0)
-                           (list (/ (leading-coefficient R)
-                                    (leading-coefficient B)))))))
+                           (list (r:multiply
+                                   field (leading-coefficient R)
+                                   (f:inverse field (leading-coefficient B))))))))
                 (rec (poly+ Q S)
                      ; note not simply poly* but a scalar and then shift
                      ; try to optimize.
                      (poly- R (poly* S B))))]))))
 
+    (define (make-polynomial-ring-over-field K)
+      (make-ring
+        polynomial? 'inf
+        (make-poly K '(0)) poly+ poly-negate
+        (make-poly K '(1)) poly*
+        (lambda (A B) (car (poly-euclidean-division A B)))
+        (lambda (A B) (< (poly-degree A) (poly-degree B)))))
 
+    (define (poly->monic-polynomial f)
+      (let* ((field (get-ring f))
+             (k (f:inverse field (leading-coefficient f))))
+        (make-poly
+          field
+          (map
+            (lambda (a) (r:multiply field a k))
+            (get-coeffs f)))))
+
+    (define (poly-gcd A B)
+      (if (not (eq? (get-ring A) (get-ring B)))
+        (error "Cannot perform polynomial division on different rings (yet)"))
+      (let ((ring (get-ring A)))
+        (poly->monic-polynomial
+          (gcd (make-polynomial-ring-over-field ring) A B))))
+
+
+
+    ;; then you check that you can instance a GCD function correctly
+
+    ;; Discriminant
+    ;; Resultant
 
 
     ;; End of module

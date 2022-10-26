@@ -1,10 +1,10 @@
-Alchemy is an extensible computer algebra library. It provides a meaningful way
-to express and use mathematical objects. A notable goal is breaking cryptography
-without fighting the library.
+Alchemy is an extensible computer algebra library. It aims to provide a
+meaningful way to express and use mathematical objects. A notable goal is
+breaking cryptography without fighting the library.
 
 # Writing on sandtable
 
-I want Alchemy to be:
+Alchemy tries to be:
 - readable -- written for readability and well documented;
 - portable -- written in R7RS (hackable, scriptable, ...) and tested on
   chicken-scheme and gambit;
@@ -13,6 +13,8 @@ I want Alchemy to be:
 
 Due to Scheme nature, you have an incredible tool. You can do virtually
 anything. But you need a proper setup.
+
+## Rejecting OOP
 
 You may look at Haskell and say how nice it is: free type checking! But the
 syntax and other annoying parts would stop us from modeling our lava into nice
@@ -63,4 +65,9 @@ and generic higher-order functions that will work with any object respecting
 some abstract pattern. Infact, the same GCD function can be used for
 polynomials.
 
+## APL function application style
 
+To implement the first algorithms applied to some context and it comes to mind
+that APL has a nice and elegant function application style. For example, A+.×B
+computes the inner product without asking you to scan rows and columns of a
+matrix.
