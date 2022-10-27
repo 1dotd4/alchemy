@@ -450,10 +450,8 @@
           ; 4. finished?
           [(= j m) (loop (+ r 1) j (+ k 1))]
           ; 2. Scan column
-          [(not
-             (and
-               (not (zero? (ma M j k)))
-               (zero? (vector-ref C j))))
+          [(or (zero? (ma M j k))
+               (not (zero? (vector-ref C j))))
             (loop r (+ j 1) k)]
                                               
           ; 3. Eliminate

@@ -67,7 +67,6 @@
   (matrix-determinat
     (rho 3 3 '(2 3 4 5 6 7 8 9 0))))
 
-(print "=========")
 (let ((res (matrix-kernel
              (rho 2 3 '(2 3 5 -4 2 3)))))
   (map v-pp res))
