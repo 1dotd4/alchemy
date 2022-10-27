@@ -9,6 +9,7 @@
     matrix-inverse
     matrix-multiplication
     matrix-determinat
+    matrix-kernel
     transpose)
   (import (scheme base)
           (scheme write)
@@ -349,11 +350,12 @@
 
     ; 2.2.3
     ;; using ordinary elimination
-    (define (matrix-determinat M)
+    (define (matrix-determinat M-orig)
       ; check square
-      (define n (vector-length M))
-      (if (not (= n (vector-length (vector-ref M 0))))
+      (define n (vector-length M-orig))
+      (if (not (= n (vector-length (vector-ref M-orig 0))))
         (error "Not square matrix"))
+      (define M (vector-copy M-orig))
       (define C (make-vector n 0))
       ;; more swaps..
       (let loop ((j 0) (i 0) (x 1))
@@ -402,7 +404,79 @@
     ;; 2.2.9 Hessenberg
 
     ;; 2.3.1 Kernel of a Matrix
-    ;;;;;;;;;;;;;;;;;;;;;;;; YOU ARE HERE!
+    (define (matrix-kernel M-orig)
+      (define M (vector-copy M-orig))
+      (define n (vector-length M))
+      (define m (vector-length (vector-ref M 1)))
+      (define C (make-vector m 0))
+      (define D (make-vector n -1))
+      (define X '())
+      (let loop ((r 0) (j 0) (k 0))
+        ; r counts the number of 0 columns
+        ; j and k are resp. row and column
+        (cond
+          ; 5. Output kernel
+          [(= k n)
+           ; for every k, 1 <= k <= n and d_0 = 0
+           ; (there will be exactly r such k),
+           ; output the column vector X = (x_i) 1<=i<=n
+           ; defined by
+           ; x_i = m_di,k if di > 0,
+           ;       1      if i = k,
+           ;       0      otherwise
+           ; These r vector form a basis for the kernel of M.
+           (let rec ((X (make-list r 0)) (k 0) (z 0))
+             (cond
+               [(= k n) X]
+               [(not (= (vector-ref D k) -1))
+                (rec X (+ k 1) z)]
+               [else
+                (begin
+                  (set! (list-ref X z) (make-vector n 0))
+                  (do ((i 0 (+ i 1)))
+                    ((= i n) '())
+                    (cond
+                      [(>= (vector-ref D i) 0)
+                        (vector-set! (list-ref X z) i (ma M (vector-ref D i) k))]
+                      [(= i k)
+                        (vector-set! (list-ref X z) i 1)]
+                      [else
+                        (vector-set! (list-ref X z) i 0)]))
+                  (rec X (+ k 1) (+ z 1)))]))
+           ; (list r M C D) ;; yes it's boring
+           ;;;;;;;;;;;;;;;;;;;;;;;; YOU ARE HERE!
+
+           ]
+          ; 4. finished?
+          [(= j m) (loop (+ r 1) j (+ k 1))]
+          ; 2. Scan column
+          [(not
+             (and
+               (not (zero? (ma M j k)))
+               (zero? (vector-ref C j))))
+            (loop r (+ j 1) k)]
+                                              
+          ; 3. Eliminate
+          [else
+            (begin
+              (let ((d (- (/ 1 (ma M j k)))))
+                (ma-set! M j k -1)
+                (do ((s (+ k 1) (+ s 1)))
+                  ((= s n) '())
+                  (ma-set! M j s (* d (ma M j s)))))
+              (do ((i 0 (+ i 1)))
+                ((= i m) '())
+                (if (not (= i j))
+                  (let ((d (ma M i k)))
+                    (ma-set! M i k 0)
+                    (do ((s (+ k 1) (+ s 1)))
+                      ((= s n) '())
+                      (ma-set! M i s
+                               (+ (ma M i s)
+                                  (* d (ma M j s))))))))
+              (vector-set! C j k)
+              (vector-set! D k j)
+              (loop r (+ j 1) (+ k 1)))])))
     
     ;; 2.3.2 Image of a Matrix
 
