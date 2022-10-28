@@ -77,3 +77,14 @@
       (make-poly R '(6 7 1))
       (make-poly R '(-6 -5 1)))))
 
+(steer-observe
+  "Polynomial evaluation."
+  (evaluate-polynomial (make-poly R '(-1 2 -6 2)) 3)
+  5)
+
+(define F16 (ZZn 16))
+(display
+  (map
+    (lambda (x) (evaluate-polynomial (make-poly F16 '(1 1 0 0 1)) x))
+    (range 0 16)))
+(display "\n")

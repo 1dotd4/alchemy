@@ -11,6 +11,8 @@
     poly-by-scalar
     poly*
 
+    evaluate-polynomial
+
     poly-euclidean-division
     poly-gcd
     make-polynomial-ring-over-field
@@ -93,6 +95,18 @@
 
     (define (leading-coefficient f)
       (last (get-coeffs f)))
+
+    ; Horner's method
+    (define (evaluate-polynomial f x)
+      (let ((ring (get-ring f)))
+        (let rec ((res (r:zero ring)) (remaining (reverse (get-coeffs f))))
+          (if (null? remaining)
+            res
+            (rec (r:add
+                   ring
+                   (car remaining)
+                   (r:multiply ring x res))
+                (cdr remaining))))))
 
     ;; Polynomial basic operations:
     ;; - addition
@@ -218,10 +232,6 @@
       (let ((ring (get-ring A)))
         (poly->monic-polynomial
           (gcd (make-polynomial-ring-over-field ring) A B))))
-
-
-
-    ;; then you check that you can instance a GCD function correctly
 
     ;; Discriminant
     ;; Resultant

@@ -442,11 +442,7 @@
                         (vector-set! (list-ref X z) i 1)]
                       [else
                         (vector-set! (list-ref X z) i 0)]))
-                  (rec X (+ k 1) (+ z 1)))]))
-           ; (list r M C D) ;; yes it's boring
-           ;;;;;;;;;;;;;;;;;;;;;;;; YOU ARE HERE!
-
-           ]
+                  (rec X (+ k 1) (+ z 1)))]))]
           ; 4. finished?
           [(= j m) (loop (+ r 1) j (+ k 1))]
           ; 2. Scan column
@@ -480,7 +476,18 @@
 
     ;; ...
 
+    ;; 2.3.4 Inverse Image
+    ;; 2.3.5 Inverse Image Matrix
+
+    ;; 2.3.6 Supplement a Basis
+
+    ;; 2.3.8 Sum of Subspaces
+    ;; 2.3.8 Intersection of Subspaces
+
     ;; 2.4.14 Smith Normal Form
+
+    ;;;;;;;;;;;;;;;;;;;;;;; YOU ARE HERE
+
     ;; 2.6.3 LLL Algorithm
     ;; 2.6.4 LLL Algorithm with Deep Insertions
     ;; 2.6.7 Integral LLL Algorithm

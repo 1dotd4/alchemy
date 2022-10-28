@@ -9,6 +9,7 @@
 (load "alchemy.linear-algebra.scm")
 (load "alchemy.polynomials.scm")
 (load "alchemy.encoding.scm")
+(load "alchemy.graph.scm")
 (load "alchemy.cipher.scm")
 (load "alchemy.cryptanalysis.scm")
 
@@ -19,6 +20,7 @@
         (alchemy number-theory)
         (alchemy linear-algebra)
         (alchemy encoding)
+        (alchemy graph)
         (alchemy cipher)
         (alchemy cryptanalysis)
         (scheme repl)
