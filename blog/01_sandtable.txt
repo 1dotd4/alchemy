@@ -14,13 +14,26 @@ Alchemy tries to be:
 Due to Scheme nature, you have an incredible tool. You can do virtually
 anything. But you need a proper setup.
 
-## Rejecting OOP
+## Staring at patterns
 
-You may look at Haskell and say how nice it is: free type checking! But the
-syntax and other annoying parts would stop us from modeling our lava into nice
-placed stones. So the first step is borrowing one of the nice part of Haskell:
-propositions as types. We encapsulate the proof of a type inside a variable.
-This is what Haskell does implicitly.
+It all started with the realization that staring at something enough will make
+you brain work and recognize patterns. Thus, we stare at patterns.
+
+When staring at patterns you are looking for invariants. I think patterns are
+invariants.  That's what pretty. When you find a pattern you can't unsee it and
+you just discovered a new layer where the pattern lives.
+
+Invariants are things that are equal, similar or some other property that makes
+two things the "same" even if they have different form or shape. An easy
+computational example is the Greatest Common Divisor on (Euclidean) rings. You
+just need one implementation of the GCD for all rings. Moreover, you can reject
+OOP and its insane way of redefining stuff for each type.
+
+You may look at Haskell for inspiration and say how nice it is: free type
+checking! But the syntax and other annoying parts would stop us from modeling
+our lava into nice placed stones. So the first step is borrowing one of the nice
+part of Haskell: propositions as types. We encapsulate the proof of a type
+inside a variable.  This is what Haskell does implicitly.
 
 Take for example the greatest commond divosor algorithm.
 
