@@ -87,9 +87,9 @@ Basic functions, algebraic structures, and combinators. See [quick reference bel
 - Distributed computation
 
 ## Quick reference
-<i id="quick-ref" />
+<span id="quick-ref"></span>
 
-<!-- <p><small>TODO: generator of this table somehow</small></p> -->
+
 Usage: `(import (alchemy LIBRARY))`
 
 <table>
