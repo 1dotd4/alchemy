@@ -23,7 +23,6 @@
           (alchemy language)
           (alchemy algebra)
           (srfi 1)
-          (srfi 9)
           (srfi 27))
   (begin
 
