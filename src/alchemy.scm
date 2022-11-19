@@ -1,19 +1,25 @@
+;; This file is part of alchemy.
+;; Copyright (c) 2022 unpx.net
+;;
+;; Licence??
+
 ;; import and glue together components here
 
-(load "version.scm")
-(load "helper.scm")
-(load "alchemy.cauldron.scm")
-(load "alchemy.language.scm")
-(load "alchemy.algebra.scm")
-(load "alchemy.number-theory.scm")
-(load "alchemy.linear-algebra.scm")
-(load "alchemy.polynomials.scm")
-(load "alchemy.encoding.scm")
-(load "alchemy.graph.scm")
-(load "alchemy.cipher.scm")
-(load "alchemy.cryptanalysis.scm")
+(load "src/shared/cauldron.scm")
+(load "src/shared/language.scm")
+(load "src/shared/graph.scm")
+(load "src/math/algebra.scm")
+(load "src/math/number-theory.scm")
+(load "src/math/linear-algebra.scm")
+(load "src/math/polynomials.scm")
+(load "src/crypto/encoding.scm")
+(load "src/crypto/cipher.scm")
+(load "src/crypto/cryptanalysis.scm")
 
-(display (string-append "Loaded version " *version*))
+; (display (string-append "Loaded version " *version*))
+(define *version* "alchemy 0.1b1\n")
+(define (reload)
+  (load "src/alchemy.scm"))
 
 (import (alchemy cauldron)
         (alchemy algebra)
