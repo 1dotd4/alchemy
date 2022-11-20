@@ -28,9 +28,11 @@ _Read more in the documentation._
   <tr><td>Flexible curried procedures</td><td>232</td></tr>
 </table>
 
-`chicken-install r7rs srfi-1 srfi-4 srfi-13 \
+```
+chicken-install r7rs srfi-1 srfi-4 srfi-13 \
   srfi-27 srfi-28 srfi-95 srfi-151 \
-  srfi-152 srfi-207 srfi-232`
+  srfi-152 srfi-207 srfi-232
+```
 
 ### Startup
 
