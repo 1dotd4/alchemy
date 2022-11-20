@@ -43,7 +43,7 @@ chicken-install r7rs srfi-1 srfi-4 srfi-13 \
 
 ### 0.1b1
 
-Basic functions, algebraic structures, and combinators. See [quick reference below](#quick-ref) for now.
+Basic functions, algebraic structures, and combinators. See documentation.
 
 ### Planned
 
