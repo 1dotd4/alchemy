@@ -48,9 +48,7 @@ Books and articles have been used to write this code and are listed below.
 </table>
 
 ```
-chicken-install r7rs srfi-1 srfi-4 srfi-13 \
-  srfi-27 srfi-28 srfi-95 srfi-151 \
-  srfi-152 srfi-207 srfi-232
+chicken-install r7rs srfi-1 srfi-4 srfi-13 srfi-27 srfi-95 srfi-151 srfi-152 srfi-232
 ```
 
 ### Startup
