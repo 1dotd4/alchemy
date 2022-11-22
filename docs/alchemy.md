@@ -53,8 +53,8 @@ chicken-install r7rs srfi-1 srfi-4 srfi-13 srfi-27 srfi-95 srfi-151 srfi-152 srf
 
 ### Startup
 
-- Test library with `csi -R r7rs alchemy.scm -s library.test.scm`
-- Run with `csi -R r7rs alchemy.scm`
+- Test library with `csi -R r7rs src/alchemy.scm -s src/.../library.test.scm`
+- Run with `csi -R r7rs src/alchemy.scm`
 
 
 ## Design principles
