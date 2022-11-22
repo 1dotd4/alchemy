@@ -26,7 +26,12 @@
     matrix-multiplication
     matrix-determinat
     matrix-kernel
-    transpose)
+    transpose
+
+    v-add
+    gram-schmidt
+    LLL
+    )
   (import (scheme base)
           (scheme write)
           (scheme case-lambda)
@@ -504,7 +509,99 @@
 
     ;;;;;;;;;;;;;;;;;;;;;;; YOU ARE HERE
 
+    (define v-add
+      (case-lambda
+        ((a) a)
+        ((va vb)
+          (list->vector
+            (map + 
+                 (vector->list va)
+                 (vector->list vb))))
+        ((va . vbs)
+         (apply v-add (cons (v-add va (car vbs)) (cdr vbs))))))
+
+    (define (gram-schmidt vectors)
+      (define (compute-muij bi)
+        (lambda (bj)
+          (/ (inner-product bi bj)
+             (inner-product bj bj))))
+      (let rec ((bs (list (car vectors)))
+                (mus '())
+                (vs (cdr vectors)))
+        (if (null? vs)
+          (cons
+            (reverse bs)
+            (reverse mus))
+          (let* ((bi (car vs))
+                 (muijs (map (compute-muij bi) bs))
+                 (-muijs (map - muijs))
+                 (bi* (apply v-add (cons bi (map scalar-multiplication -muijs bs)))))
+            (rec
+              (cons bi* bs)
+              (cons muijs mus)
+              (cdr vs))))))
+
     ;; 2.6.3 LLL Algorithm
+
+    (define (LLL M delta)
+      (define rows (vector->list (transpose M)))
+      (define n (length rows))
+      (define (internal-gram-schmidt vectors)
+        (define (compute-muij bi)
+          (lambda (bj)
+            (/ (inner-product bi bj)
+              (inner-product bj bj))))
+        (let rec ((bs  '())
+                  (mus (list (make-list n 0)))
+                  (vs vectors))
+          (if (null? vs)
+            (cons
+              (reverse bs)
+              (reverse mus))
+            (let* ((bi (car vs))
+                  (muijs (map (compute-muij bi) bs))
+                  (-muijs (map - (map round muijs)))
+                  (bi* (apply v-add (cons bi (map scalar-multiplication -muijs bs)))))
+              (rec
+                (cons bi* bs)
+                (cons (take
+                        (append
+                          muijs
+                          (list 1)
+                          (make-list n 0)
+                          )
+                        n)
+                      mus)
+                (cdr vs))))))
+      (define (internal-swap-prev alist i)
+        (append
+          (take alist (- i 1))
+          (list
+            (list-ref alist i)
+            (list-ref alist (- i 1)))
+          (drop alist (+ i 1))))
+      (let loop ((bgs (internal-gram-schmidt rows)) (k 1))
+        (if (= k n)
+          (car bgs) ; LLL reduced base
+          (let ((bs* (car bgs))
+                (muijs (cdr bgs)))
+            (display k)
+            (display "\n")
+            (display bgs)
+            (display "\n")
+            (if (>= (inner-product (list-ref bs* k) (list-ref bs* k))
+                    (* (- delta (* (list-ref (list-ref muijs (- k 0)) (- k 1))
+                                   (list-ref (list-ref muijs (- k 0)) (- k 1))))
+                       (inner-product (list-ref bs* (- k 1)) (list-ref bs* (- k 1)))))
+              (loop (cons bs* muijs) (+ 1 k))
+              (loop
+                (internal-gram-schmidt
+                  (internal-swap-prev bs* k))
+                (max 1 (- k 1))))))))
+
+        
+
+
     ;; 2.6.4 LLL Algorithm with Deep Insertions
     ;; 2.6.7 Integral LLL Algorithm
     ;; 2.6.8 LLL Algorithm on Not Necessarily Independant Vectors
