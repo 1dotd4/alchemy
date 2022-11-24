@@ -610,9 +610,11 @@
     ;;               (internal-swap-prev bs* k))
     ;;             (max 1 (- k 1))))))))
 
+
     (define (LLL M delta)
       (define rows (vector->list (transpose M)))
       (define n (length rows))
+      ;
       (define (mu vectors j i)
         (cond
           ((= j i) 1)
@@ -621,8 +623,8 @@
             (let ((bj (list-ref vectors j))
                   (bi (list-ref vectors i)))
               (/ (inner-product bj bi)
-                (inner-product bi bi))))))
-
+                 (inner-product bi bi))))))
+      ;
       (define (reduce vectors k l)
         (display "Reducing (")
         (display k)
@@ -636,14 +638,14 @@
             (let ((v (round mukl)))
               (append
                 (take vectors k)
-                (list (v-add
-                        (list-ref vectors k)
-                        (scalar-multiplication
-                          (- v)
-                          (list-ref vectors l)
-                          )))
+                (list
+                  (v-add
+                    (list-ref vectors k)
+                    (scalar-multiplication
+                      (- v)
+                      (list-ref vectors l))))
                 (drop vectors (+ k 1)))))))
-
+      ;
       (define (exchange vectors k)
         (display "Swapping: ")
         (display k)
@@ -654,19 +656,25 @@
             (list-ref vectors k)
             (list-ref vectors (- k 1)))
           (drop vectors (+ k 1))))
-
+      ;
       (let rec ((rows rows) (k 1))
         (display k)
         (display "\n")
-        (display rows)
+        ; (display rows)
         (display "\n")
         (cond
-          ((= k n) rows)
+          ((= k n) (transpose (list->vector rows)))
           (else
             (let ((rows* (reduce rows k (- k 1)))
                   (mukk-1 (mu rows k (- k 1))))
+              (display (cons (inner-product (list-ref rows* k) (list-ref rows* k))
+                             (* (- delta (* mukk-1 mukk-1))
+                                (- delta (* mukk-1 mukk-1))
+                                (inner-product (list-ref rows* (- k 1)) (list-ref rows* (- k 1))))))
+              (display "\n")
               (if (>= (inner-product (list-ref rows* k) (list-ref rows* k))
                       (* (- delta (* mukk-1 mukk-1))
+                         (- delta (* mukk-1 mukk-1))
                          (inner-product (list-ref rows* (- k 1)) (list-ref rows* (- k 1)))))
                 (rec
                   (do ((l (- k 2) (- l 1))
@@ -676,6 +684,70 @@
                 (rec
                   (exchange rows* k)
                   (max 1 (- k 1)))))))))
+
+
+    ; This won't work.
+    ; (define (LLL2 M delta)
+    ;   (define rows (transpose M))
+    ;   (define n (vector-length rows))
+    ;   ;
+    ;   (define (mu vectors j i)
+    ;     (cond
+    ;       ((= j i) 1)
+    ;       ((< j i) 0)
+    ;       (else
+    ;         (let ((bj (vector-ref vectors j))
+    ;               (bi (vector-ref vectors i)))
+    ;           (/ (inner-product bj bi)
+    ;              (inner-product bi bi))))))
+    ;   ;
+    ;   (define (reduce! vectors k l)
+    ;     (display "Reducing (")
+    ;     (display k)
+    ;     (display ", ")
+    ;     (display l)
+    ;     (display ")\n")
+    ;     ;; with k > l
+    ;     (let ((mukl (mu vectors k l)))
+    ;       (if (<= (abs mukl) 1/2)
+    ;         vectors
+    ;         (let ((v (round mukl)))
+    ;           (vector-set!
+    ;             vectors
+    ;             k
+    ;             (v-add
+    ;               (vector-ref vectors k)
+    ;               (scalar-multiplication
+    ;                 (- v)
+    ;                 (vector-ref vectors l))))
+    ;           vectors))))
+    ;   ;
+    ;   (define (exchange! vectors k)
+    ;     (display "Swapping ")
+    ;     (display k)
+    ;     (display "\n")
+    ;     (define tmp (vector-copy (vector-ref vectors k)))
+    ;     (vector-set! vectors k (vector-copy (vector-ref vectors (- k 1))))
+    ;     (vector-set! vectors (- k 1) (vector-copy tmp))
+    ;     vectors)
+    ;   ;
+    ;   (let rec ((rows rows) (k 1))
+    ;     (cond
+    ;       ((= k n) (transpose rows))
+    ;       (else
+    ;         (let ((rows* (reduce! rows k (- k 1)))
+    ;               (mukk-1 (mu rows k (- k 1))))
+    ;           (if (>= (inner-product (vector-ref rows* k) (vector-ref rows* k))
+    ;                   (* (- delta (* mukk-1 mukk-1))
+    ;                      (inner-product (vector-ref rows* (- k 1)) (vector-ref rows* (- k 1)))))
+    ;             (rec
+    ;               (do ((l (- k 2) (- l 1))
+    ;                    (inc-rows rows* (reduce! inc-rows k l)))
+    ;                 ((< l 0) inc-rows))
+    ;               (+ k 1))
+    ;             (rec
+    ;               (exchange! rows* k)
+    ;               (max 1 (- k 1)))))))))
 
 
 
