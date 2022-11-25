@@ -19,6 +19,7 @@
     define-curried
     compose
     applify
+    ; W
     )
   (import (scheme base)
           (scheme case-lambda)
@@ -75,5 +76,11 @@
 
     ;; 8. while
     ; already have
+
+
+    ; (define-syntax W
+    ;   (syntax-rules ()
+    ;     ((_ fn arg)
+    ;      (fn arg arg))))
 
     ))

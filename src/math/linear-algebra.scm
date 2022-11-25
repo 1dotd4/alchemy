@@ -35,6 +35,7 @@
   (import (scheme base)
           (scheme write)
           (scheme case-lambda)
+          (scheme inexact)
           (alchemy language)
           (alchemy algebra)
           (srfi 1)
@@ -542,79 +543,13 @@
               (cdr vs))))))
 
     ;; 2.6.3 LLL Algorithm
-
-    ;; (define (LLL M delta)
-    ;;   (define rows (vector->list (transpose M)))
-    ;;   (define n (length rows))
-    ;;   (define (reduce vectors k l)
-    ;;     (define (compute-muij bi)
-    ;;       (lambda (bj)
-    ;;         (/ (inner-product bi bj)
-    ;;            (inner-product bj bj))))
-    ;;     (let rec ((bs  '())
-    ;;               (mus '())
-    ;;               (vs (reverse vectors)))
-    ;;       (if (null? vs)
-    ;;         (cons (reverse bs)
-    ;;               (reverse mus))
-    ;;         (let* ((bi (car vs))
-    ;;               (muijs (map (compute-muij bi) bs))
-    ;;               (-muijs (map - (map round muijs)))
-    ;;               (bi* (apply v-add (cons bi (map scalar-multiplication -muijs bs)))))
-    ;;           (rec
-    ;;             (append
-    ;;               bs
-    ;;               (list bi*))
-    ;;             (append
-    ;;               mus
-    ;;               (list (take
-    ;;                       (append
-    ;;                         muijs
-    ;;                         (list 1)
-    ;;                         (make-list n 0)
-    ;;                         )
-    ;;                       n)))
-    ;;             (cdr vs))))))
-    ;;   (define (internal-swap-prev alist i)
-    ;;     (display "Swapping: ")
-    ;;     (display i)
-    ;;     (display "\n")
-    ;;     (append
-    ;;       (take alist (- i 1))
-    ;;       (list
-    ;;         (list-ref alist i)
-    ;;         (list-ref alist (- i 1)))
-    ;;       (drop alist (+ i 1))))
-    ;;   (let loop ((bgs (internal-gram-schmidt rows)) (k 1))
-    ;;     (if (= k n)
-    ;;       (car bgs) ; LLL reduced base
-    ;;       (let ((bs* (car bgs))
-    ;;             (muijs (cdr bgs)))
-    ;;         (display k)
-    ;;         (display "\n")
-    ;;         (display bgs)
-    ;;         (display "\n")
-    ;;         (display (inner-product (list-ref bs* k) (list-ref bs* k)))
-    ;;         (display "\n")
-    ;;         (display (* (- delta (* (list-ref (list-ref muijs (- k 0)) (- k 1))
-    ;;                                 (list-ref (list-ref muijs (- k 0)) (- k 1))))
-    ;;                     (inner-product (list-ref bs* (- k 1)) (list-ref bs* (- k 1)))))
-    ;;         (display "\n")
-    ;;         (if (>= (inner-product (list-ref bs* k) (list-ref bs* k))
-    ;;                 (* (- delta (* (list-ref (list-ref muijs (- k 0)) (- k 1))
-    ;;                                (list-ref (list-ref muijs (- k 0)) (- k 1))))
-    ;;                    (inner-product (list-ref bs* (- k 1)) (list-ref bs* (- k 1)))))
-    ;;           (loop (internal-gram-schmidt bs*) (+ 1 k))
-    ;;           (loop
-    ;;             (internal-gram-schmidt
-    ;;               (internal-swap-prev bs* k))
-    ;;             (max 1 (- k 1))))))))
-
+    (define (eucliedean-norm v)
+      (sqrt (inner-product v v)))
 
     (define (LLL M delta)
-      (define rows (vector->list (transpose M)))
-      (define n (length rows))
-      ;
+      (define starting-rows (vector->list (transpose M)))
+      (define n (length starting-rows))
+      ; Internal computation for mu_{j,i}
       (define (mu vectors j i)
         (cond
           ((= j i) 1)
@@ -624,13 +559,8 @@
                   (bi (list-ref vectors i)))
               (/ (inner-product bj bi)
                  (inner-product bi bi))))))
-      ;
+      ; LLL reduce algorithm
       (define (reduce vectors k l)
-        (display "Reducing (")
-        (display k)
-        (display ", ")
-        (display l)
-        (display ")\n")
         ;; with k > l
         (let ((mukl (mu vectors k l)))
           (if (<= (abs mukl) 1/2)
@@ -645,37 +575,26 @@
                       (- v)
                       (list-ref vectors l))))
                 (drop vectors (+ k 1)))))))
-      ;
+      ; LLL exchange algorithm
       (define (exchange vectors k)
-        (display "Swapping: ")
-        (display k)
-        (display "\n")
         (append
           (take vectors (- k 1))
           (list
             (list-ref vectors k)
             (list-ref vectors (- k 1)))
           (drop vectors (+ k 1))))
-      ;
-      (let rec ((rows rows) (k 1))
-        (display k)
-        (display "\n")
-        ; (display rows)
-        (display "\n")
+      ; LLL main
+      (let rec ((rows starting-rows) (k 1))
         (cond
           ((= k n) (transpose (list->vector rows)))
           (else
-            (let ((rows* (reduce rows k (- k 1)))
-                  (mukk-1 (mu rows k (- k 1))))
-              (display (cons (inner-product (list-ref rows* k) (list-ref rows* k))
-                             (* (- delta (* mukk-1 mukk-1))
-                                (- delta (* mukk-1 mukk-1))
-                                (inner-product (list-ref rows* (- k 1)) (list-ref rows* (- k 1))))))
-              (display "\n")
-              (if (>= (inner-product (list-ref rows* k) (list-ref rows* k))
-                      (* (- delta (* mukk-1 mukk-1))
-                         (- delta (* mukk-1 mukk-1))
-                         (inner-product (list-ref rows* (- k 1)) (list-ref rows* (- k 1)))))
+            (let* ((rows* (reduce rows k (- k 1)))
+                   (mukk-1 (mu rows* k (- k 1)))
+                   (kth (list-ref rows* k))
+                   (kth-1 (list-ref rows* (- k 1))))
+              (if (>= (eucliedean-norm kth)
+                      (* (- delta (square mukk-1))
+                         (eucliedean-norm kth-1)))
                 (rec
                   (do ((l (- k 2) (- l 1))
                        (inc-rows rows* (reduce inc-rows k l)))
@@ -684,76 +603,6 @@
                 (rec
                   (exchange rows* k)
                   (max 1 (- k 1)))))))))
-
-
-    ; This won't work.
-    ; (define (LLL2 M delta)
-    ;   (define rows (transpose M))
-    ;   (define n (vector-length rows))
-    ;   ;
-    ;   (define (mu vectors j i)
-    ;     (cond
-    ;       ((= j i) 1)
-    ;       ((< j i) 0)
-    ;       (else
-    ;         (let ((bj (vector-ref vectors j))
-    ;               (bi (vector-ref vectors i)))
-    ;           (/ (inner-product bj bi)
-    ;              (inner-product bi bi))))))
-    ;   ;
-    ;   (define (reduce! vectors k l)
-    ;     (display "Reducing (")
-    ;     (display k)
-    ;     (display ", ")
-    ;     (display l)
-    ;     (display ")\n")
-    ;     ;; with k > l
-    ;     (let ((mukl (mu vectors k l)))
-    ;       (if (<= (abs mukl) 1/2)
-    ;         vectors
-    ;         (let ((v (round mukl)))
-    ;           (vector-set!
-    ;             vectors
-    ;             k
-    ;             (v-add
-    ;               (vector-ref vectors k)
-    ;               (scalar-multiplication
-    ;                 (- v)
-    ;                 (vector-ref vectors l))))
-    ;           vectors))))
-    ;   ;
-    ;   (define (exchange! vectors k)
-    ;     (display "Swapping ")
-    ;     (display k)
-    ;     (display "\n")
-    ;     (define tmp (vector-copy (vector-ref vectors k)))
-    ;     (vector-set! vectors k (vector-copy (vector-ref vectors (- k 1))))
-    ;     (vector-set! vectors (- k 1) (vector-copy tmp))
-    ;     vectors)
-    ;   ;
-    ;   (let rec ((rows rows) (k 1))
-    ;     (cond
-    ;       ((= k n) (transpose rows))
-    ;       (else
-    ;         (let ((rows* (reduce! rows k (- k 1)))
-    ;               (mukk-1 (mu rows k (- k 1))))
-    ;           (if (>= (inner-product (vector-ref rows* k) (vector-ref rows* k))
-    ;                   (* (- delta (* mukk-1 mukk-1))
-    ;                      (inner-product (vector-ref rows* (- k 1)) (vector-ref rows* (- k 1)))))
-    ;             (rec
-    ;               (do ((l (- k 2) (- l 1))
-    ;                    (inc-rows rows* (reduce! inc-rows k l)))
-    ;                 ((< l 0) inc-rows))
-    ;               (+ k 1))
-    ;             (rec
-    ;               (exchange! rows* k)
-    ;               (max 1 (- k 1)))))))))
-
-
-
-
-        
-
 
     ;; 2.6.4 LLL Algorithm with Deep Insertions
     ;; 2.6.7 Integral LLL Algorithm
