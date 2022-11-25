@@ -551,14 +551,15 @@
       (define n (length starting-rows))
       ; Internal computation for mu_{j,i}
       (define (mu vectors j i)
+        (let ((vecs* (car (gram-schmidt vectors))))
         (cond
           ((= j i) 1)
           ((< j i) 0)
           (else
             (let ((bj (list-ref vectors j))
-                  (bi (list-ref vectors i)))
+                  (bi (list-ref vecs* i)))
               (/ (inner-product bj bi)
-                 (inner-product bi bi))))))
+                 (inner-product bi bi)))))))
       ; LLL reduce algorithm
       (define (reduce vectors k l)
         ;; with k > l
