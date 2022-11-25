@@ -32,6 +32,8 @@
     poly-euclidean-division
     poly-gcd
     make-polynomial-ring-over-field
+
+    lagrange-interpolation
     )
   (import (scheme base)
           (scheme write)
@@ -251,6 +253,34 @@
     ;; Discriminant
     ;; Resultant
 
+    ;; Other stuff I think goes here.
+    (define (lagrange-interpolation pairs x)
+      (define n (length pairs))
+      ;
+      (define (interpolate pairs i x)
+        (let rec ((j 0)
+                  (term (cdr (list-ref pairs i))))
+          (cond
+            ((= j n)
+            term)
+            ((= j i)
+            (rec (+ j 1) term))
+            (else
+              (rec
+                (+ j 1)
+                (* term
+                  (/ (- x (car (list-ref pairs j)))
+                      (- (car (list-ref pairs i))
+                        (car (list-ref pairs j))))))))))
+      ;
+      (let rec ((res 0) (i 0))
+        (if (= i n)
+          res
+          (rec
+            (+ res (interpolate pairs i x))
+            (+ i 1)))))
+
 
     ;; End of module
     ))
+

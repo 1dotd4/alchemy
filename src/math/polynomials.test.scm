@@ -104,3 +104,8 @@
     (lambda (x) (evaluate-polynomial (make-poly F16 '(1 1 0 0 1)) x))
     (range 0 16)))
 (display "\n")
+
+(steer-observe
+  "Lagrange interpolation."
+  (lagrange-interpolation '((0 . 2) (1 . 3) (2 . 12) (5 . 147)) 3)
+  35) ; f(3) = 35
