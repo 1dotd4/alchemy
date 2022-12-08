@@ -543,41 +543,91 @@
               (cdr vs))))))
 
     ;; 2.6.3 LLL Algorithm
-    (define (eucliedean-norm v)
-      (sqrt (inner-product v v)))
+    (define (eucliedean-norm-squared v)
+      (inner-product v v))
+
+    (define (pid a)
+      (display a)
+      (display "\n")
+      a)
 
     (define (LLL M delta)
       (define starting-rows (vector->list (transpose M)))
       (define n (length starting-rows))
       ; Internal computation for mu_{j,i}
-      (define (mu vectors j i)
-        (let ((vecs* (car (gram-schmidt vectors))))
+      ; (define (mu vectors j i)
+      ;   (let ((vecs* (car (gram-schmidt vectors))))
+      ;   (cond
+      ;     ((= j i) 1)
+      ;     ((< j i) 0)
+      ;     (else
+      ;       (let ((bj (list-ref vectors j))
+      ;             (bi (list-ref vecs* i)))
+      ;         (/ (inner-product bj bi)
+      ;            (inner-product bi bi)))))))
+      (define (get-mu M j i)
         (cond
           ((= j i) 1)
           ((< j i) 0)
           (else
-            (let ((bj (list-ref vectors j))
-                  (bi (list-ref vecs* i)))
-              (/ (inner-product bj bi)
-                 (inner-product bi bi)))))))
+            (list-ref (list-ref M (- j 1)) i))))
+      ; The magic round function
+      (define (capital-mu mu)
+        ;; notice this is not a round function as 1/2 is floored
+        (if (> (- mu (floor mu)) 1/2)
+          (+ 1 (floor mu))
+          (floor mu)))
       ; LLL reduce algorithm
-      (define (reduce vectors k l)
-        ;; with k > l
-        (let ((mukl (mu vectors k l)))
+      (define (reduce X X* M k l)
+        (display "Reduced ")
+        (display k)
+        (display ", ")
+        (display l)
+        (display "\n")
+        (let ((mukl (get-mu M k l)))
           (if (<= (abs mukl) 1/2)
-            vectors
-            (let ((v (round mukl)))
-              (append
-                (take vectors k)
-                (list
-                  (v-add
-                    (list-ref vectors k)
-                    (scalar-multiplication
-                      (- v)
-                      (list-ref vectors l))))
-                (drop vectors (+ k 1)))))))
+            (list X X* M)
+            (let ((v (capital-mu mukl)))
+              (display v)
+              (display "\n")
+              (list
+                (append
+                  (take X k)
+                  (list
+                    (v-add
+                      (list-ref X k)
+                      (scalar-multiplication
+                        (- v)
+                        (list-ref X l))))
+                  (drop X (+ k 1)))
+                X*
+                M)))))
+
+      ;; (define (reduce vectors k l)
+      ;;   ;; with k > l
+      ;;   (let ((mukl
+      ;;           (list-ref (list-ref
+      ;;           (cadr (gram-schmidt vectors))
+      ;;           l) k)))
+      ;;     (display mukl)
+      ;;     (display "\n")
+      ;;     (if (<= (abs mukl) 1/2)
+      ;;       vectors
+      ;;       (let ((v (capital-mu mukl)))
+      ;;         (append
+      ;;           (take vectors k)
+      ;;           (list
+      ;;             (v-add
+      ;;               (list-ref vectors k)
+      ;;               (scalar-multiplication
+      ;;                 (- v)
+      ;;                 (list-ref vectors l))))
+      ;;           (drop vectors (+ k 1)))))))
       ; LLL exchange algorithm
       (define (exchange vectors k)
+        (display "Exchanged ")
+        (display k)
+        (display "\n")
         (append
           (take vectors (- k 1))
           (list
@@ -585,25 +635,41 @@
             (list-ref vectors (- k 1)))
           (drop vectors (+ k 1))))
       ; LLL main
-      (let rec ((rows starting-rows) (k 1))
-        (cond
-          ((= k n) (transpose (list->vector rows)))
-          (else
-            (let* ((rows* (reduce rows k (- k 1)))
-                   (mukk-1 (mu rows* k (- k 1)))
-                   (kth (list-ref rows* k))
-                   (kth-1 (list-ref rows* (- k 1))))
-              (if (>= (eucliedean-norm kth)
-                      (* (- delta (square mukk-1))
-                         (eucliedean-norm kth-1)))
-                (rec
-                  (do ((l (- k 2) (- l 1))
-                       (inc-rows rows* (reduce inc-rows k l)))
-                    ((< l 0) inc-rows))
-                  (+ k 1))
-                (rec
-                  (exchange rows* k)
-                  (max 1 (- k 1)))))))))
+      (let ((starting-stuff (gram-schmidt starting-rows)))
+        (let rec ((rows starting-rows) (rows* (car starting-stuff)) (M (cdr starting-stuff)) (k 1))
+          (display "======\n")
+          (cond
+            ((= k n) (transpose (list->vector rows)))
+            (else
+              (let* ((intermediate-stuff (reduce rows rows* M k (- k 1)))
+                     (intermediate-rows (car intermediate-stuff))
+                     (intermediate-M (car (cddr intermediate-stuff)))
+                     (mukk-1 (get-mu intermediate-M k (- k 1)))
+                     (kth (list-ref rows* k))
+                     (kth-1 (list-ref rows* (- k 1))))
+                (ma-pp (transpose (list->vector rows)))
+                (if (>= (eucliedean-norm-squared kth)
+                        (* (- delta (square mukk-1))
+                           (eucliedean-norm-squared kth-1)))
+                  (let* ((new-stuff (do ((l (- k 2) (- l 1))
+                                        (more-stuff intermediate-stuff
+                                                  (reduce (car more-stuff)
+                                                          (cadr more-stuff)
+                                                          (car (cddr more-stuff))
+                                                          k l)))
+                                     ((< l 0) more-stuff)))
+                         (new-rows (car new-stuff))
+                         (new-rows* (cadr new-stuff))
+                         (new-M (car (cddr new-stuff))))
+                    (rec new-rows new-rows* new-M (+ k 1)))
+                  (let* ((new-rows (exchange intermediate-rows k))
+                         (new-stuff (gram-schmidt new-rows))
+                         (new-rows* (car new-stuff))
+                         (new-M (cdr new-stuff)))
+                    (rec new-rows
+                         new-rows*
+                         new-M
+                         (max 1 (- k 1)))))))))))
 
     ;; 2.6.4 LLL Algorithm with Deep Insertions
     ;; 2.6.7 Integral LLL Algorithm
