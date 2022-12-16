@@ -121,17 +121,17 @@
 ;     3/4)
 ;   (rho 2 2 '(-1 0 0 -2)))
 
-; (print (gram-schmidt (list (vector 0 1 2)
-;                            (vector 1 -1 3)
-;                            (vector 1 2 6))))
+(print (gram-schmidt (list (vector 0 1 2)
+                           (vector 1 -1 3)
+                           (vector 1 2 6))))
 
-; (ma-pp
-;   (LLL
-;     (rho 3 3
-;          '(1 -1  3
-;            1  0  5
-;            1  2  6))
-;     3/4))
+(ma-pp
+  (LLL
+    (rho 3 3
+         '(1 -1  3
+           1  0  5
+           1  2  6))
+    3/4))
 
 (ma-pp
   (LLL
