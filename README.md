@@ -29,7 +29,14 @@ _Read more in the documentation._
 </table>
 
 ```
-chicken-install r7rs srfi-1 srfi-4 srfi-13 srfi-27 srfi-95 srfi-151 srfi-152 srfi-207 srfi-232
+chicken-install r7rs srfi-1 srfi-4 srfi-13 srfi-27 srfi-95 srfi-151 srfi-152 srfi-207 srfi-232 linenoise trace
+```
+
+It is also suggested to create a config file `~/.csirc`.
+
+```
+(import linenoise)
+(current-input-port (make-linenoise-port))
 ```
 
 ### Startup

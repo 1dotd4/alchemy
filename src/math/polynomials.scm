@@ -16,7 +16,6 @@
 
 (define-library (alchemy polynomials)
   (export 
-    
     make-poly
     ; get-coeffs
     ; get-ring
@@ -408,6 +407,13 @@
     ;;     ;; find a fi in fs that can divide g
     ;;     ;; otherwise add cx^gamma to the remainder
     ;;    ))
+
+    ;;; 3.4 Factorization of Polynomials Modulo p
+    ;; (define (berlekamp-factorization p f)
+    ;;   ; p an integer that is either a prime or a prime power
+    ;;   ; f a polynomial with coefficients modulo p
+
+    ;; Berlekamp-Massey
 
     ;; End of module
     ))
