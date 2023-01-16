@@ -60,9 +60,9 @@
 (steer-observe "⌊sqrt(15)⌋." (integer-square-root 15) 3)
 (steer-observe "⌊sqrt(12)⌋." (integer-square-root 12) 3)
 
-(steer-taste "Is 64 square?" (square-test 64))
-(steer-taste "Is 123^2 square?" (square-test (expt 123 2)))
-(steer-taste "Is 3^3 square?" (not (square-test (expt 3 3))))
+(steer-taste "Is 64 square?" (square? 64))
+(steer-taste "Is 123^2 square?" (square? (expt 123 2)))
+(steer-taste "Is 3^3 square?" (not (square? (expt 3 3))))
 
-(steer-taste "Is 7^6 a prime power?" (prime-power-test (expt 7 6)))
-(steer-taste "Is 6^4 a prime power?" (not (prime-power-test (expt 6 4))))
+(steer-taste "Is 7^6 a prime power?" (prime-power? (expt 7 6)))
+(steer-taste "Is 6^4 a prime power?" (not (prime-power? (expt 6 4))))

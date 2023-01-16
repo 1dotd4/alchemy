@@ -28,7 +28,7 @@
     (define (fermat-method n)
       (let iter ((t (integer-square-root n)))
         (let ((b (- (square t) n)))
-          (if (square-test b)
+          (if (square? b)
             (let ((c (integer-square-root b)))
               (cons (- t c) (+ t c)))
             (iter (+ t 1))))))

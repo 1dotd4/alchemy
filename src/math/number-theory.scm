@@ -23,7 +23,7 @@
           modexpt
           factors
           integer-square-root
-          square-test prime-power-test
+          square? prime-power?
           ;;
           make-unit-group ZZn*
           )
@@ -49,7 +49,6 @@
     ;; (G, *) a group.
     ;; recall group are closed under * and every element has an inverse.
     ;; We may also use monoid for free
-
     ;; 1.2.1
     (define (double-and-add algebraic-structure base exponent)
       (if (zero? exponent)
@@ -60,13 +59,11 @@
             (error "Dear Cohen, no, I'll use a monoid."))
           (let rec ((result (g:identity algebraic-structure)) (exponent exponent) (composite base))
             (if (zero? exponent) result
-              (if (odd? exponent)
-                (rec (g:compose algebraic-structure composite result)
+                (rec (if (odd? exponent)
+                       (g:compose algebraic-structure composite result)
+                       result)
                      (quotient exponent 2) 
-                     (g:compose algebraic-structure composite composite))
-                (rec result
-                     (quotient exponent 2)
-                     (g:compose algebraic-structure composite composite))))))))
+                     (g:compose algebraic-structure composite composite)))))))
 
     (define (square-multiply algebraic-structure g n)
       (double-and-add (ring->multiplicative-monoid algebraic-structure) g n))
@@ -188,7 +185,6 @@
                                        (abs a))))))))))))))
 
     ;; The Algorithm of Tonelly and Shanks
-
     ;; 1.5.1 - Tonelli Square root modulo
     (define (tonelli n p) 
       ;; Step 0. Check that n is indeed square: (n | p) must be ≡ 1
@@ -196,7 +192,6 @@
                         (if (= (legendreSymbol a p) 1)
                             (setup a p)
                             #f)))
-
               ;; Setup
               ;; Step 1. Factors out powers of 2 from p-1
               ;; Define q -odd- and s such as p-1 = q * 2^s
@@ -296,7 +291,7 @@
             x))))
 
     ;; 1.7.3
-    (define (square-test n)
+    (define (square? n)
       (let ((q11 (map (lambda (t) (>= (kronecker t 11) 0)) (iota 11)))
             (q63 (map (lambda (t) (>= (kronecker t 63) 0)) (iota 63)))
             (q64 (map (lambda (t) (>= (kronecker t 64) 0)) (iota 64)))
@@ -312,7 +307,7 @@
                 (= n (* q q))))))))
 
     ;; 1.7.4
-    (define (prime-power-test n)
+    (define (prime-power? n)
       (let rec ((a 2))
         (let* ((b (square-multiply (ZZn n) a n))
                (p (gcd (- b a) n)))
@@ -324,9 +319,7 @@
                  ((= 1 n*) p)
                  ((not (zero? (modulo n* p))) #f)
                  (else (try (quotient n* p))))))
-
             (else (rec (add1 a)))))))
-
 
     ;; =================================
     ;; n = a^2 + b^2 => n mod 4 === {0, 1, 2}
@@ -338,7 +331,6 @@
     (define (legendreSymbol a p)
       (let ((power (modexpt a (quotient (- p 1) 2) p)))
         (if (> power 1) -1 power)))
-
 
     ;; Note to self, get a factor function and simplify this trivial
     ;; division.
@@ -364,10 +356,7 @@
 
     ;; ===[ Prime Numbers ]===
     (define (modexpt b e M)
-      (cond
-        ((zero? e) 1)
-        ((even? e) (modexpt (modulo (* b b) M) (quotient e 2) M))
-        ((odd? e) (modulo (* b (modexpt b (- e 1) M)) M))))
+      (square-multiply (ZZn M) b e))
 
     (define (prime? n)
       (define (pseudoprime? n)
@@ -415,6 +404,7 @@
         (if (prime? next)
           next
           (rec (+ 1 next)))))
+
     (define (nth-prime n)
       (let rec ((prime 2) (nth 1))
         (if (= n nth)
