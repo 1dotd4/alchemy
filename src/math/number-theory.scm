@@ -16,6 +16,7 @@
 
 (define-library (alchemy number-theory)
   (export double-and-add square-multiply
+          divisors
           gcd xgcd
           chinese-remainder-theorem
           sum-of-two-squares? prime? kronecker legendreSymbol tonelli phi
@@ -45,6 +46,8 @@
                   1 (lambda (a b) (modulo (* a b) n)) (lambda (a) (xgcd->u (xgcd a n)))))
 
     (define (ZZn* n) (make-unit-group n))
+
+    (define (divisors n) (filter (lambda (x) (zero? (modulo n x))) (iota (- n 1) 1)))
 
     ;;;; From Cohen
     ;;; The Powering Algorithms
