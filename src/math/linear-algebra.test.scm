@@ -19,57 +19,57 @@
         (alchemy linear-algebra))
 
 
-(ma-pp (rho 3 4 '(1 2 3 4 5 6 7 8 9 10 11 12)))
+(display (matrix->string (rho 3 4 '(1 2 3 4 5 6 7 8 9 10 11 12))))
 
-(ma-pp (transpose (rho 3 4 '(1 2 3 4 5 6 7 8 9 10 11 12))))
+(display (matrix->string (transpose (rho 3 4 '(1 2 3 4 5 6 7 8 9 10 11 12)))))
 
-(ma-pp (ma-swap-col! (rho 3 4 '(1 2 3 4 5 6 7 8 9 10 11 12))
-                     1 2))
+(display (matrix->string (ma-swap-col! (rho 3 4 '(1 2 3 4 5 6 7 8 9 10 11 12))
+                     1 2)))
 
-(ma-pp (rho 2 2 '(2 3 5 6)))
-(v-pp
+(display (matrix->string (rho 2 2 '(2 3 5 6))))
+(display (vec->string
   (square-linear-system
     (rho 2 2 '(2 3 5 6))
-    (vector 4 7)))
+    (vector 4 7))))
 
-(v-pp
+(display (vec->string
   (square-linear-system
     (rho 4 4 '( 1  1 -3  1
                -5  3 -4  1
                 1  0  2 -1
                 1  2  0  0))
-    (vector 2 0 1 12)))
+    (vector 2 0 1 12))))
 
-(ma-pp (matrix-identity 3))
+(display (matrix->string (matrix-identity 3)))
 
-(ma-pp
+(display (matrix->string
   (matrix-inverse
     (rho 4 4 '( 1  1 -3  1
                -5  3 -4  1
                 1  0  2 -1
-                1  2  0  0))))
+                1  2  0  0)))))
 
-(ma-pp
+(display (matrix->string
   (matrix-inverse
     (rho 2 2 '(4 7
-               2 6))))
+               2 6)))))
 
 (display "Should be I: \n")
-(ma-pp
+(display (matrix->string
   (matrix-multiplication
     (matrix-inverse
       (rho 2 2 '(4 7 2 6)))
-    (rho 2 2 '(4 7 2 6))))
+    (rho 2 2 '(4 7 2 6)))))
 
 (display "Should be I: \n")
-(ma-pp
+(display (matrix->string
   (matrix-multiplication
     (rho 2 2 '(6/10 -7/10 -2/10 4/10))
-    (rho 2 2 '(4 7 2 6))))
+    (rho 2 2 '(4 7 2 6)))))
 
-(ma-pp
+(display (matrix->string
   (matrix-inverse
-    (rho 1 1 '(7))))
+    (rho 1 1 '(7)))))
 
 (print
   (matrix-determinat
@@ -85,8 +85,9 @@
 
 (let ((res (matrix-kernel
              (rho 2 3 '(2 3 5 -4 2 3)))))
-  (map v-pp res))
+  (map (compose display vec->string) res))
 
+(display "Gram schmidt 1:\n")
 (print (gram-schmidt (list (vector 1 -1 1) (vector 1 0 1) (vector 1 1 2))))
 ;; (#(-1/2 0 1/2) #(1/3 2/3 1/3) #(1 -1 1))
 
@@ -121,23 +122,26 @@
 ;     3/4)
 ;   (rho 2 2 '(-1 0 0 -2)))
 
+(display "Gram schmidt 2:\n")
 (print (gram-schmidt (list (vector 0 1 2)
                            (vector 1 -1 3)
                            (vector 1 2 6))))
 
-(ma-pp
-  (LLL
-    (rho 3 3
-         '(1 -1  3
-           1  0  5
-           1  2  6))
-    3/4))
+(display
+  (matrix->string
+    (LLL
+      (rho 3 3
+          '(1 -1  3
+            1  0  5
+            1  2  6))
+      3/4)))
 
-(ma-pp
-  (LLL
-    (rho 5 5 '(1 0 0 0 -414
-               0 1 0 0 -198
-               0 0 1 0 -250
-               0 0 0 1 -272
-               0 0 0 0  884))
-    3/4))
+(display
+  (matrix->string
+    (LLL
+      (rho 5 5 '(1 0 0 0 -414
+                0 1 0 0 -198
+                0 0 1 0 -250
+                0 0 0 1 -272
+                0 0 0 0  884))
+      3/4)))

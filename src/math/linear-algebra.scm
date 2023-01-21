@@ -17,8 +17,8 @@
 (define-library (alchemy linear-algebra)
   (export 
     ma-swap-col!
-    ma-pp
-    v-pp
+    matrix->string
+    vec->string
     square-linear-system
     rho
     matrix-identity
@@ -47,16 +47,19 @@
         (vector-set! vec i (vector-ref vec j))
         (vector-set! vec j t)))
 
-    (define (v-pp vec)
+    (define (vec->string vec)
       (let ((len (vector-length vec)))
-        (display "[ ")
-        (map (lambda (i)
-               (begin
-                 (display (number->string (vector-ref vec i))))
-               (if (= len (+ 1 i))
-                 (display " ]\n")
-                 (display ", ")))
-             (iota len))))
+        (string-append
+          "[ "
+          (apply
+            string-append
+            (map (lambda (i)
+                   (string-append
+                     (number->string (vector-ref vec i))
+                     (if (= len (+ 1 i))
+                       " ]\n"
+                       ", ")))
+                 (iota len))))))
 
     ;; Note that matrix is represented column-wise
     (define (ma matrix row column) (vector-ref (vector-ref matrix column) row))
@@ -83,23 +86,26 @@
         (ma-set! A bi bj tmp)
         A))
 
-    (define (ma-pp A)
+    (define (matrix->string A)
       (let ((columns (vector-length A))
             (rows (vector-length (vector-ref A 0))))
-        (display "[ ")
-        (map
-          (lambda (i)
-            (map
-              (lambda (j)
-                (begin
-                  (display (number->string (ma A i j)))
-                  (if (= columns (+ 1 j)) 
-                    (if (= rows (+ 1 i))
-                      (display " ]\n")
-                      (display ",\n  "))
-                    (display ",\t"))))
-              (iota columns)))
-          (iota rows))))
+        (string-append
+          "[ "
+          (apply string-append
+                 (map
+                   (lambda (i)
+                     (apply string-append
+                            (map
+                              (lambda (j)
+                                (string-append
+                                  (number->string (ma A i j))
+                                  (if (= columns (+ 1 j)) 
+                                    (if (= rows (+ 1 i))
+                                      " ]\n"
+                                      ",\n  ")
+                                    ",\t")))
+                              (iota columns))))
+                   (iota rows))))))
 
     ;; This one exists to help you write, not to help you calculate, infact it's row-wise
     (define (rho rows columns data)
@@ -238,7 +244,7 @@
           ; 3. all zero entry
           [(= n i)
            (begin
-             (ma-pp M)
+             (write (matrix->string M))
              (error "Not invertible matrix!"))]
           ; 3. find non-zero entry
           [(zero? (ma M i j)) (loop j (+ 1 i))]
@@ -322,7 +328,7 @@
           ; 3. all zero entry
           [(= n i)
            (begin
-             (ma-pp M)
+             (write (matrix->string M))
              (error "Not invertible matrix!"))]
           ; 3. find non-zero entry
           [(zero? (ma M i j)) (loop j (+ 1 i))]
@@ -600,6 +606,7 @@
                (mus (cdr B-GS-stuff))
                (X* (car B-GS-stuff))
                (mukl (get-mu mus k l)))
+          ; (trace-with (compose matrix->string list->vector) X*)
           ; (display "Reducing ")
           ; (display k)
           ; (display ", ")
@@ -607,7 +614,7 @@
           ; (display ": ")
           ; (display mukl)
           ; (display "\n")
-          ; (ma-pp (transpose (list->vector (car state))))
+          ; (matrix->string (transpose (list->vector (car state))))
           (if (<= (abs mukl) 1/2)
             (list X X* mus k)
             (let* ((big-mu (ceiling (- mukl 1/2)))
@@ -641,12 +648,12 @@
 
       (let main-procedure ((internal-state (list starting-rows '() '() 1)))
         ; (display "Now in main \n")
-        ; (ma-pp (transpose (list->vector (car internal-state))))
+        ; (matrix->string (transpose (list->vector (car internal-state))))
         (if (= (list-ref internal-state 3) n)
           (transpose (list->vector (car internal-state)))
           (let* ((reduced-state (internal-reduce internal-state (- (list-ref internal-state 3) 1))))
             ; (display "Now before decing\n")
-            ; (ma-pp (transpose (list->vector (car reduced-state))))
+            ; (matrix->string (transpose (list->vector (car reduced-state))))
             (if (check-state reduced-state)
               (main-procedure (internal-recursive-reduce reduced-state))
               (main-procedure (internal-swap reduced-state)))))))

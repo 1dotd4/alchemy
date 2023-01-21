@@ -16,6 +16,9 @@
 
 (define-library (alchemy language)
   (export 
+    trace
+    trace-with
+    mtrace
     define-curried
     compose
     applify
@@ -29,6 +32,28 @@
           )
 
   (begin
+
+    (define-syntax mtrace
+      (syntax-rules ()
+        ((mtrace x)
+          (begin 
+            (display "Trace: ") (write 'x) (newline)
+            x))))
+
+    (define-syntax trace
+      (syntax-rules ()
+        ((mtrace x)
+          (begin 
+            (display "Trace: ") (write x) (newline)
+            x))))
+
+    (define-syntax trace-with
+      (syntax-rules ()
+        ((mtrace fn x)
+          (begin 
+            (display "Trace: \n") (display (fn x)) (newline)
+            x))))
+
 
     ;;;; Backus, Curry et al.
 
