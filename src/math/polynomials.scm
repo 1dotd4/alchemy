@@ -46,7 +46,6 @@
           (scheme case-lambda)
           (alchemy language)
           (alchemy algebra)
-          (srfi 1)
           (srfi 27)
           (srfi 95)
           (srfi 152))

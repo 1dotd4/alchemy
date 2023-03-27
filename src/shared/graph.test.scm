@@ -15,9 +15,9 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 (import (alchemy cauldron)
+        (alchemy language)
         (alchemy algebra)
-        (alchemy graph)
-        (srfi 1))
+        (alchemy graph))
 
 ; (define (member? lst obj) (not (null? (member obj lst))))
 (define (insert obj set) (if (member obj set) set (cons obj set)))

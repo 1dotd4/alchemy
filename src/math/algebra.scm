@@ -33,7 +33,7 @@
           )
   (import (scheme base)
           (scheme case-lambda)
-          (srfi 1)
+          (alchemy language)
           )
   (begin
   ;; PLEASE MOVE THOSE
@@ -42,7 +42,15 @@
     (define (cartesian-product xs ys)
         (if (or (zero? (length xs)) (zero? (length ys)))
           '()
-          (fold append '() (map (lambda (x) (map (lambda (y) (list x y)) ys)) xs))))
+          (fold
+            append
+            '()
+            (map
+              (lambda (x)
+                (map
+                  (lambda (y) (list x y))
+                  ys))
+              xs))))
 
     ;; [i , j)
     ;; 3 4 5 6
@@ -89,7 +97,8 @@
       (fold (list-ref G 4) (g:identity G) (cons a b)))
 
     ;;; Group
-    (define (make-group member? cardinality identity compose inverse)
+    (define (make-group member? cardinality identity
+                        compose inverse)
       (make-algebraic-structure member? cardinality
                                 identity compose inverse))
 
@@ -104,7 +113,8 @@
     ;; https://mathstrek.blog/2012/10/31/introduction-to-ring-theory-8/
 
     ;;; Ring (group and monoid)
-    (define (make-ring member? cardinality zero add negate one multiply quot less?)
+    (define (make-ring member? cardinality zero add negate
+                       one multiply quot less?)
       (make-algebraic-structure member? cardinality
                                 zero add negate
                                 one multiply quot less?))
@@ -171,7 +181,8 @@
     ;;; Field (Two groups)
     ; Group<+> + Monoid<*>
     ; = Ring + inverse<*>
-    (define (make-field member? cardinality zero add negate one multiply quot less? inverse)
+    (define (make-field member? cardinality zero add negate
+                        one multiply quot less? inverse)
       (make-algebraic-structure member? cardinality
                                 zero add negate
                                 one multiply quot less? inverse))
@@ -219,7 +230,8 @@
 
     (define (make-integer-ring-modulo n)
       (make-ring integer? (- n 1)
-                 0 (lambda (a b) (modulo (+ a b) n)) (lambda (a) (- n a))
+                 0 (lambda (a b) (modulo (+ a b) n))
+                 (lambda (a) (- n a))
                  1 (lambda (a b) (modulo (* a b) n))
                  quotient <))
 

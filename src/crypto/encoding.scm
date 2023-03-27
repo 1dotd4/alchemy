@@ -23,10 +23,10 @@
   (import (scheme base)
           (scheme write)
           (scheme case-lambda)
-          (srfi 1)
           (srfi 4)   ; Homogeneous numeric vector datatypes
           (srfi 151)
           (srfi 207) ; String-notated bytevectors
+          (alchemy language)
           )
   (begin
     (define (encode-hex bytes)

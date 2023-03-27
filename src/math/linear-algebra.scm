@@ -38,7 +38,6 @@
           (scheme inexact)
           (alchemy language)
           (alchemy algebra)
-          (srfi 1)
           (srfi 27))
   (begin
 

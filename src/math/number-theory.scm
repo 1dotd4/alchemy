@@ -19,7 +19,8 @@
           divisors
           gcd xgcd
           chinese-remainder-theorem
-          sum-of-two-squares? prime? kronecker legendreSymbol tonelli phi
+          sum-of-two-squares? prime? kronecker legendreSymbol
+          tonelli phi
           order-of-element
           modexpt
           factors
@@ -27,27 +28,45 @@
           square? prime-power?
           ;;
           make-unit-group ZZn*
+
+          mod-bar
+          continued-fraction
           )
   (import (scheme base)
           (scheme write)
           (scheme case-lambda)
+          ; (scheme inexact)
           (alchemy language)
           (alchemy algebra)
-          (srfi 1)
           (srfi 26)
           (srfi 27))
   (begin
     (define (add1 n) (+ n 1))
     (define (sub1 n) (+ n -1))
 
+    (define (mod-bar a n)
+      (let ((m (modulo a n))
+            (half (/ n 2)))
+        (if (> m half)
+          (- m n)
+          m)))
+
     (define (make-unit-group n)
-      (make-group (lambda (a) (and (integer? a) (= 1 (xgcd->d (xgcd a n)))))
-                  (phi n)
-                  1 (lambda (a b) (modulo (* a b) n)) (lambda (a) (xgcd->u (xgcd a n)))))
+      (make-group
+        (lambda (a)
+          (and (integer? a) (= 1 (xgcd->d (xgcd a n)))))
+        (phi n)
+        1
+        (lambda (a b)
+          (modulo (* a b) n))
+        (lambda (a)
+          (xgcd->u (xgcd a n)))))
 
     (define (ZZn* n) (make-unit-group n))
 
-    (define (divisors n) (filter (lambda (x) (zero? (modulo n x))) (iota (- n 1) 1)))
+    (define (divisors n)
+      (filter (lambda (x) (zero? (modulo n x)))
+              (iota (- n 1) 1)))
 
     ;;;; From Cohen
     ;;; The Powering Algorithms
@@ -60,15 +79,22 @@
         (g:identity algebraic-structure)
         (if (< exponent 0)
           (if (g:got-inverse? algebraic-structure)
-            (double-and-add (g:inverse algebraic-structure base) (- exponent))
+            (double-and-add (g:inverse algebraic-structure base)
+                            (- exponent))
             (error "Dear Cohen, no, I'll use a monoid."))
-          (let rec ((result (g:identity algebraic-structure)) (exponent exponent) (composite base))
+          (let rec ((result (g:identity algebraic-structure))
+                    (exponent exponent) (composite base))
             (if (zero? exponent) result
-                (rec (if (odd? exponent)
-                       (g:compose algebraic-structure composite result)
-                       result)
-                     (quotient exponent 2) 
-                     (g:compose algebraic-structure composite composite)))))))
+                (rec
+                  (if (even? exponent)
+                    result
+                    (g:compose algebraic-structure
+                               composite
+                               result))
+                  (quotient exponent 2) 
+                  (g:compose algebraic-structure
+                             composite
+                             composite)))))))
     ; Alternative version I'm evaluating
     ; (define (double-and-add algebraic-structure base exponent)
     ;   (if (zero? exponent)
@@ -88,7 +114,11 @@
     ;               (cons base exponent))))))
 
     (define (square-multiply algebraic-structure g n)
-      (double-and-add (ring->multiplicative-monoid algebraic-structure) g n))
+      (double-and-add
+        (ring->multiplicative-monoid
+          algebraic-structure)
+        g
+        n))
 
     ;; 1.3.1
     (define original-gcd gcd)
@@ -109,14 +139,25 @@
           (r:one ring)
           (r:zero ring)
           a)
-        (let rec ((u (r:one ring)) (d a) (v1 (r:zero ring)) (v3 b))
+        (let rec ((u (r:one ring))
+                  (d a)
+                  (v1 (r:zero ring))
+                  (v3 b))
           (if (r:zero? ring v3)
             (list u
-                  (r:quotient ring (r:subtract ring d (r:multiply ring a u)) b)
+                  (r:quotient ring
+                              (r:subtract ring
+                                          d 
+                                          (r:multiply ring
+                                                      a
+                                                      u))
+                              b)
                   d)
             (let* ((q  (r:quotient ring d v3))
                    (t3 (r:modulo   ring d v3))
-                   (t1 (r:subtract ring u (r:multiply ring q v1))))
+                   (t1 (r:subtract ring
+                                   u
+                                   (r:multiply ring q v1))))
               (rec v1 v3 t1 t3))))))
 
     (define (xgcd->u x) (car x))
@@ -125,8 +166,11 @@
 
     ;; 1.3.12
     ; note, gcd(mi, mj) = 1 for any pair.
-    (define (chinese-remainder-theorem R xmis) ; (... (xi . mi) ...) => x ≡ xi mod mi for all i
-      (let rec ((x (caar xmis)) (m (cdar xmis)) (rxmis (cdr xmis)))
+    (define (chinese-remainder-theorem R xmis)
+      ; (... (xi . mi) ...) => x ≡ xi mod mi for all i
+      (let rec ((x (caar xmis))
+                (m (cdar xmis))
+                (rxmis (cdr xmis)))
         (if (null? rxmis) (cons x m)
           (let* ((xmi (car rxmis))
                  (xi (car xmi))
@@ -135,15 +179,27 @@
                  (u (xgcd->u r))
                  (v (xgcd->v r))
                  (d (xgcd->d r)))
-            (rec (r:modulo R
-                           (r:add R (r:multiply R u m xi) (r:multiply R v mi x))
-                           (r:multiply R m mi))
+            (rec (r:modulo
+                   R
+                   (r:add R
+                          (r:multiply R u m xi)
+                          (r:multiply R v mi x))
+                   (r:multiply R m mi))
                  (r:multiply R m mi)
                  (cdr rxmis))))))
 
     ; ;;; Coninued Fraction Expression of Real Numbers
     ; ;; x = a0 + (1 / (a1 + (1 / (a2 + ...))))
     ; ;; x = [a0, a1, a2, ...]
+
+    (define (continued-fraction x n)
+      (let rec ((i n) (res (list (exact (floor x)))) (tmp x))
+        (if (zero? i)
+          (reverse res)
+          (let ((next-x (/ (- tmp (car res)))))
+            (rec (- i 1)
+                 (cons (exact (floor next-x)) res)
+                 next-x)))))
 
     ; ;; 1.3.13
     ; (define (continue-fraction-lehmer x a a1) ; a < x < a1
@@ -201,10 +257,17 @@
                     (let remove2s-a ((v 0) (a a))
                       (if (even? a)
                         (remove2s-a (add1 v) (quotient a 2))
-                        (let ((k (if (odd? v) (* k (tab2k b)) k)))
-                          (reciprocity (* k (if (and (odd? (quotient a 2)) (odd? (quotient b 2))) -1 1))
-                                       (modulo b (abs a))
-                                       (abs a))))))))))))))
+                        (let ((k (if (odd? v)
+                                   (* k (tab2k b))
+                                   k)))
+                          (reciprocity
+                            (* k
+                               (if (and (odd? (quotient a 2))
+                                        (odd? (quotient b 2)))
+                                 -1
+                                 1))
+                            (modulo b (abs a))
+                            (abs a))))))))))))))
 
     ;; The Algorithm of Tonelly and Shanks
     ;; 1.5.1 - Tonelli Square root modulo

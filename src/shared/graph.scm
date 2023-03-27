@@ -17,7 +17,7 @@
 (define-library (alchemy graph)
   (export graph->dot)
   (import (scheme base)
-          (srfi 1))
+          (alchemy language))
   (begin
     (define (graph->dot G)
       ;; Right now G := (nodes . edges)

@@ -23,6 +23,27 @@
     compose
     applify
     ; W
+
+    ; export stuff from srfi-1
+    iota
+    last
+    fold
+    unfold
+    filter
+    partition
+    remove
+    take
+    drop
+    take-while
+    drop-while
+    find
+    any
+    every
+    ; member
+    ; assoc
+    alist-cons
+    zip
+
     )
   (import (scheme base)
           (scheme case-lambda)

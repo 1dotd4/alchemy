@@ -18,9 +18,9 @@
   (export xor xor-byte xor-key)
   (import (scheme base)
           (scheme write)
-          (srfi 1)
           (srfi 4)
           (srfi 151) ; Bitwise Operations
+          (alchemy language)
           )
   (begin
     (define (xor a b)
