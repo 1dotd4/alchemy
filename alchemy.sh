@@ -1,3 +1,3 @@
 #!/bin/sh
 CSI=csi
-$CSI -R r7rs src/alchemy.scm $@
+$CSI -q -w -R r7rs src/alchemy.scm $@

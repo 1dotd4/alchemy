@@ -34,12 +34,16 @@
 
     lagrange-interpolation
 
-    make-multivariate-poly
+    ;; make-multivariate-poly
     mpoly-zero?
     mpoly->string
-    mpoly+
     mpoly-<glex
     mpoly-<lex
+    mpoly+
+    mpoly*
+    mleading-monomial
+    mleading-coeff
+    mpoly-euclidean-division-residue
     )
   (import (scheme base)
           (scheme write)
@@ -289,18 +293,33 @@
 
 
     ;; Multivariate polynomials
-    (define-record-type <multivariate-polynomial>
-      (make-multivariate-poly ring coeffs)
-      mpolynomial?
-      (ring mget-ring set-ring!)
-      (coeffs mget-coeffs set-coeffs!))
-    ;; Structure of a monomial (1/2 x y^3 z^2) => (1/2 1 3 2)
-    ;; Structure of a polynomial (y^2 - z) => ((1 0 2 0) (1 0 0 1))
 
+    ; Lists are good enough for Grobner
+    ; Structure of a monomial (1/2 x y^3 z^2) => (1/2 1 3 2)
+    ; Structure of a polynomial (y^2 - z) => ((1 0 2 0) (1 0 0 1))
+    ; ...but what about variable substitution?
 
+    ;; monomial order
+    (define (mpoly-<lex ma mb)
+      (if (not (= (length ma) (length mb)))
+        (error "monomials of multivariate polynomial not in the same ring.")
+        (let rec ((da (cdr ma)) (db (cdr mb)))
+          (if (null? ma)
+            #f ;; they are equal
+            (cond
+              [(= (car da) (car db)) (rec (cdr da) (cdr db))] ;; check next
+              [else (< (car da) (car db))]))))) ;; there is one bigger than another
 
-    (define (mpoly-zero? mp)
-      (null? (mget-coeffs mp)))
+    (define (mpoly-<glex ma mb)
+      (if (not (= (length ma) (length mb)))
+        (error "monomials of multivariate polynomial not in the same ring.")
+        (let ((da (fold + 0 (cdr ma)))
+              (db (fold + 0 (cdr mb))))
+          (cond
+            [(= da db) (mpoly-<lex ma mb)] ;; they are the same total degree, check with lex
+            [else (< da db)])))) ;; there is one bigger
+
+    (define (mpoly-zero? mp) (null? mp))
 
     (define (mpoly->string mp)
       ;; TODO clean this
@@ -330,71 +349,103 @@
                            (zip
                              (cdr monomial)
                              (map (compose list->string list) (string->list "xyzt")))))))
-              (mget-coeffs mp))
+              mp)
             " + "))
         "\n"))
 
-    (define (mpoly+ f . gs)
+    ;; XXX: note this is the inner ring, the one of the coefficients!
+    (define (mpoly+ R f . gs)
       (define (prune-zero-coeffs m)
         (not (zero? (car m))))
-      (define (monomial-addition ring)
-        (lambda (monomial f)
-          (let rec ((toview (mget-coeffs f)) (done '()))
-            (if (null? toview)
-              (make-multivariate-poly
-                ring
-                (cons monomial done))
-              (let ((current (car toview)))
-                (if (equal? (cdr current) (cdr monomial))
-                  (make-multivariate-poly
-                    ring
-                    (filter
-                      prune-zero-coeffs
-                      (append
-                        (reverse done)
-                        (list
-                          (cons
-                            (r:add ring (car monomial) (car current))
-                            (cdr current)))
-                        toview)))
-                  (rec (cdr toview) (cons current done))))))))
-
+      (define (monomial-addition monomial current-f)
+        (let rec ((toview current-f) (done '()))
+          (if (null? toview)
+            (cons monomial done)
+            (let ((current-monomial (car toview)))
+              (if (equal? (cdr current-monomial) (cdr monomial))
+                (filter
+                  prune-zero-coeffs
+                  (append
+                    (reverse done)
+                    (list
+                      (cons
+                        (r:add R (car monomial) (car current-monomial))
+                        (cdr current-monomial)))
+                    (cdr toview)))
+                (rec (cdr toview) (cons current-monomial done)))))))
       (define (internal-add f g)
-        (if (not (eq? (mget-ring f) (mget-ring g)))
-          (error "Cannot perform polynomial addition on different rings (yet)"))
-        (let ((R (mget-ring f)))
-          (fold (monomial-addition R) f (mget-coeffs g))))
-      (fold internal-add f gs))
+        (fold monomial-addition f g))
+      (sort (fold internal-add f gs) mpoly-<lex))
 
-    ;; monomial order
-    (define (mpoly-<lex ma mb)
-      (if (not (= (length ma) (length mb)))
-        (error "monomials of multivariate polynomial not in the same ring.")
-        (let rec ((da (cdr ma)) (db (cdr mb)))
-          (if (null? ma)
-            #f ;; they are equal
-            (cond
-              [(= (car da) (car db)) (rec (cdr da) (cdr db))] ;; check next
-              [else (< (car da) (car db))]))))) ;; there is one bigger than another
+    (define (mpoly* R f . gs)
+      ;; TODO: check R is actually a ring...
+      (define (internal-addition R)
+        (lambda (f g) (mpoly+ R f g)))
+      (define (monomial-multiplication current-f)
+        (lambda (monomial)
+          (map
+            (lambda (f-monomial)
+              (cons
+                (r:multiply R (car f-monomial) (car monomial))
+                (map + (cdr f-monomial) (cdr monomial))))
+            current-f)))
+      (define (internal-multiply f g)
+        (apply ;; I hate to do this...
+          mpoly+ R
+          (map (monomial-multiplication f) g)))
+      (fold internal-multiply f gs))
 
-    (define (mpoly-<glex ma mb)
-      (if (not (= (length ma) (length mb)))
-        (error "monomials of multivariate polynomial not in the same ring.")
-        (let ((da (fold + 0 (cdr ma)))
-              (db (fold + 0 (cdr mb))))
-          (cond
-            [(= da db) (mpoly-<lex ma mb)] ;; they are the same total degree, check with lex
-            [else (< da db)])))) ;; there is one bigger
+    (define (mpoly-opposite R f)
+      (define (monomial-opposite m)
+        (cons (r:negate R (car m)) (cdr m)))
+      (map monomial-opposite f))
 
-    (define (mleading-coeff less? mp)
-      (car (car (sort (mget-coeffs mp) less?))))
+    (define (mleading-term less? mp)
+      (car (reverse (sort mp less?))))
 
     (define (mleading-monomial less? mp)
-      (let ((m (car (sort (mget-coeffs mp) less?))))
-        (cons 1 (cdr m))))
+      (cons 1 (cdr (mleading-term less? mp))))
 
-    ;; (define (mpoly-euclidean-division initial-g fs)
-    ;;   (define the-ring (mget-ring initial-g))
+    (define (mleading-coeff less? mp)
+      (car (mleading-term less? mp)))
+
+    ;;; XXX: the ordering should be inside the ring
+    (define (mpoly-euclidean-division-residue R less? initial-g fs)
+      (define (mmonomial-division a b)
+        (list
+          (cons
+            (/ (car a) (car b))
+            (map - (cdr a) (cdr b)))))
+      (let rec ((g initial-g) (r '()))
+        (if (mpoly-zero? (trace "G" g))
+          r
+          (let try ((rfs fs))
+            (if (null? (trace "rfs" rfs))
+              (rec
+                (mpoly+ R g (mpoly-opposite R (list (mleading-term less? g))))
+                (mpoly+ R r (list (mleading-term less? g))))
+              (if (less? (mleading-monomial less? (car rfs))
+                        (mleading-monomial less? g))
+                (let* ((gamma (mmonomial-division
+                                (mleading-term less? g)
+                                (mleading-term less? (car rfs))))
+                      (f* (mpoly* R (mpoly-opposite R gamma) (car rfs))))
+                  (rec (mpoly+ R g f*) r))
+                (try (cdr rfs))))))))
+
+    ;;;; (define (mpoly-euclidean-division-residue less? initial-g fs)
+    ;;;;   (define the-ring (mget-ring initial-g))
+    ;;;;   (let rec ((g initial-g) (r (make-multivariate-poly the-ring '())))
+    ;;;;     (if (mpoly-zero? g)
+    ;;;;       r
+    ;;;;       (if (less? (mleading-monomial (car fs))
+    ;;;;                  (mleading-monomial g))
+    ;;;;         (let ((d (mmonomial-division ring (mleading-monomial g) (mleading-monomial (car fs)))))
+    ;;;;           (mpoly+
+    ;;;;             g
+    ;;;;             (mpoly-opposite
+    ;;;;               (mpoly*
+    ;;;;       (mpoly+ g (car fs)))))
     ;;   (let rec ((g initial-g) (r (make-multivariate-poly the-ring '())))
     ;;     (if (mpoly-zero? g)
     ;;       r ; return the remainder, looks like nobody cares about the quotient

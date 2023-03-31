@@ -63,16 +63,24 @@
 
     (define-syntax trace
       (syntax-rules ()
-        ((mtrace x)
+        ((trace x)
           (begin 
             (display "Trace: ") (write x) (newline)
+            x))
+        ((trace m x)
+          (begin
+            (display "Trace: ") (display m) (display "\n\t") (write x) (newline)
             x))))
 
     (define-syntax trace-with
       (syntax-rules ()
-        ((mtrace fn x)
+        ((_ fn x)
           (begin 
             (display "Trace: \n") (display (fn x)) (newline)
+            x))
+        ((_ m fn x)
+          (begin 
+            (display "Trace: \n") (display m) (display "\n\t") (display (fn x)) (newline)
             x))))
 
 

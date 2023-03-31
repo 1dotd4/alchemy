@@ -51,18 +51,21 @@
           (- m n)
           m)))
 
-    (define (make-unit-group n)
-      (make-group
-        (lambda (a)
-          (and (integer? a) (= 1 (xgcd->d (xgcd a n)))))
-        (phi n)
-        1
-        (lambda (a b)
-          (modulo (* a b) n))
-        (lambda (a)
-          (xgcd->u (xgcd a n)))))
+    (define make-unit-group
+      (case-lambda
+        ((n) (make-unit-group n (phi n)))
+        ((n ord)
+          (make-group
+            (lambda (a)
+              (and (integer? a) (= 1 (xgcd->d (xgcd a n)))))
+            (phi n)
+            1
+            (lambda (a b)
+              (modulo (* a b) n))
+            (lambda (a)
+              (xgcd->u (xgcd a n)))))))
 
-    (define (ZZn* n) (make-unit-group n))
+    (define ZZn* make-unit-group)
 
     (define (divisors n)
       (filter (lambda (x) (zero? (modulo n x)))

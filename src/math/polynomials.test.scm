@@ -19,18 +19,36 @@
         (alchemy polynomials)
         (srfi 95))
 
-
-
 (display
   (mpoly->string
-    (make-multivariate-poly R '((1 1 2 100)
-                                (-1 2 1 1)))))
+    ;; TODO: multivariate-poly should become a ring structure
+    ;; (make-multivariate-poly R
+    '((1 1 2 100)
+      (-1 2 1 1))))
 
-(display
-  (mpoly->string
-    (mpoly+
-      (make-multivariate-poly R '((1 1 2 10) (-1 2 1 1)))
-      (make-multivariate-poly R '((-1 1 2 10) (7 2 3 4))))))
+(steer-observe
+  "Multivariate polynomial (internal) addition"
+  (mpoly+
+    R
+    '((1 1 2 10) (-1 2 1 1))
+    '((-1 1 2 10) (7 2 3 4)))
+  '((-1 2 1 1) (7 2 3 4)))
+
+(steer-observe
+  "Multivariate polynomial (internal) addition"
+  (mpoly+
+    R
+    '()
+    '((-1 1 2 10) (7 2 3 4)))
+  '((-1 1 2 10) (7 2 3 4)))
+
+(steer-observe
+  "Multivariate polynomial (internal) addition"
+  (mpoly+
+    R
+    '((-1 1 2 10) (7 2 3 4))
+    '())
+  '((-1 1 2 10) (7 2 3 4)))
 
 (steer-observe
   "Multivariate monomial order <glex."
@@ -41,6 +59,35 @@
   "Multivariate monomial order <lex."
   (sort '((1 1 2 100) (-1 1 3 1)) mpoly-<lex)
   '((1 1 2 100) (-1 1 3 1)))
+
+(steer-observe
+  "Multivariate leading monomial lex"
+  (mleading-coeff mpoly-<lex '((1 1 2 100) (-1 1 3 1)))
+  -1)
+
+(steer-observe
+  "Multivariate leading monomial glex"
+  (mleading-monomial mpoly-<glex '((1 1 2 100) (-1 1 3 1)))
+  '(1 1 2 100))
+
+(steer-observe
+  "Multivatiate polynomial (internal) multiplication"
+  (mpoly*
+    R
+    '((2 1 0 0) (1 0 1 1))
+    '((2 1 0 0) (1 0 1 1)))
+  '((1 0 2 2) (4 1 1 1) (4 2 0 0)))
+
+(display
+  (mpoly->string
+    (mpoly-euclidean-division-residue
+      R
+      mpoly-<glex
+      '((1 2 1 1) (-1 0 1 3))
+      (list
+        '((1 1 1 1) (-1 1 1 0))
+        '((1 2 1 0) (-1 0 1 1))
+        '((1 0 1 2) (-1 0 1 1))))))
 
 (exit)
 

@@ -34,13 +34,16 @@
             (iter (+ t 1))))))
 
     ;; TODO:
-    ;; - CFRAC method
+    ;; - CFRAC method, just for fun and RSA
     ;;   - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3985315/
     ;;   - https://web.math.pmf.unizg.hr/~duje/pdf/dujececc.pdf
-    ;; - Class Group Method
+    ;; - Dixon
+    ;; - Pollard p-1
+    ;; - Pollard rho
     ;; - Elliptic Curve Method
-    ;; - Multiple Polynomial Quadratic Sieve ?
-    ;; - Number Field Sieve
+    ;; - General Number Field Sieve
+
+    ;; discrete logs?
 
 
     ;; End of module
