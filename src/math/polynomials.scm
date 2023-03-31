@@ -44,6 +44,8 @@
     mleading-monomial
     mleading-coeff
     mpoly-euclidean-division-residue
+    s-polynomial
+    grobner-basis
     )
   (import (scheme base)
           (scheme write)
@@ -336,25 +338,24 @@
                     (number->string (car monomial)))
                   (apply string-append
                          (map
-                           (lambda (deg)
-                             (if (zero? (car deg))
+                           (lambda (deg letter)
+                             (if (zero? deg)
                                ""
                                (string-append
-                                 (cadr deg)
-                                 (if (= 1 (car deg))
+                                 letter
+                                 (if (= 1 deg)
                                    ""
                                    (string-append
                                      "^"
-                                     (number->string (car deg)))))))
-                           (zip
-                             (cdr monomial)
-                             (map (compose list->string list) (string->list "xyzt")))))))
+                                     (number->string deg))))))
+                           (cdr monomial)
+                           (map (compose list->string list) (string->list "xyzt"))))))
               mp)
             " + "))
         "\n"))
 
     ;; XXX: note this is the inner ring, the one of the coefficients!
-    (define (mpoly+ R f . gs)
+    (define (mpoly+ R less? f . gs)
       (define (prune-zero-coeffs m)
         (not (zero? (car m))))
       (define (monomial-addition monomial current-f)
@@ -375,12 +376,12 @@
                 (rec (cdr toview) (cons current-monomial done)))))))
       (define (internal-add f g)
         (fold monomial-addition f g))
-      (sort (fold internal-add f gs) mpoly-<lex))
+      (reverse (sort (fold internal-add f gs) less?)))
 
-    (define (mpoly* R f . gs)
+    (define (mpoly* R less? f . gs)
       ;; TODO: check R is actually a ring...
       (define (internal-addition R)
-        (lambda (f g) (mpoly+ R f g)))
+        (lambda (f g) (mpoly+ R less? f g)))
       (define (monomial-multiplication current-f)
         (lambda (monomial)
           (map
@@ -391,7 +392,7 @@
             current-f)))
       (define (internal-multiply f g)
         (apply ;; I hate to do this...
-          mpoly+ R
+          mpoly+ R less?
           (map (monomial-multiplication f) g)))
       (fold internal-multiply f gs))
 
@@ -410,28 +411,64 @@
       (car (mleading-term less? mp)))
 
     ;;; XXX: the ordering should be inside the ring
+    (define (mmonomial-division a b)
+      (list
+        (cons
+          (/ (car a) (car b))
+          (map - (cdr a) (cdr b)))))
+
     (define (mpoly-euclidean-division-residue R less? initial-g fs)
-      (define (mmonomial-division a b)
-        (list
-          (cons
-            (/ (car a) (car b))
-            (map - (cdr a) (cdr b)))))
+      (define (monomial-divisible? a b)
+        (fold and* #t (map <= (cdr a) (cdr b))))
       (let rec ((g initial-g) (r '()))
-        (if (mpoly-zero? (trace "G" g))
-          r
+        (if (mpoly-zero? g)
+          (reverse (sort r less?))
           (let try ((rfs fs))
-            (if (null? (trace "rfs" rfs))
+            (if (null? rfs)
               (rec
-                (mpoly+ R g (mpoly-opposite R (list (mleading-term less? g))))
-                (mpoly+ R r (list (mleading-term less? g))))
-              (if (less? (mleading-monomial less? (car rfs))
-                        (mleading-monomial less? g))
+                (mpoly+ R less? g (mpoly-opposite R (list (mleading-term less? g))))
+                (mpoly+ R less? r (list (mleading-term less? g))))
+              (if (monomial-divisible? (mleading-monomial less? (car rfs))
+                                       (mleading-monomial less? g))
                 (let* ((gamma (mmonomial-division
                                 (mleading-term less? g)
                                 (mleading-term less? (car rfs))))
-                      (f* (mpoly* R (mpoly-opposite R gamma) (car rfs))))
-                  (rec (mpoly+ R g f*) r))
+                      (f* (mpoly* R less? (mpoly-opposite R gamma) (car rfs))))
+                  (rec (mpoly+ R less? g f*) r))
                 (try (cdr rfs))))))))
+
+    ;; XXX: todo, this is a higher level function, we shall not have such interface
+    (define (s-polynomial R less? f g)
+      (define (monomial-lcm a b)
+        (cons 1 (map max (cdr a) (cdr b))))
+      (let* ((gamma (monomial-lcm
+                      (mleading-monomial less? f)
+                      (mleading-monomial less? g)))
+              (alpha (mmonomial-division gamma (mleading-term less? f)))
+              (beta  (mpoly-opposite R (mmonomial-division gamma (mleading-term less? g)))))
+        (mpoly+
+          R
+          less?
+          (mpoly* R less? alpha f)
+          (mpoly* R less? beta g))))
+
+
+    (define (grobner-basis R less? initial-gs)
+      (let rec ((current-base initial-gs))
+        (let for-f ((f-to-do initial-gs))
+          (if (null? f-to-do)
+            current-base
+            (let for-g ((g-to-do initial-gs))
+              (if (null? g-to-do)
+                (for-f (cdr f-to-do))
+                (let ((s-bar (mpoly-euclidean-division-residue
+                               R less?
+                               (s-polynomial R less? (car f-to-do) (car g-to-do))
+                               current-base)))
+                  (if (mpoly-zero? s-bar)
+                    (for-g (cdr g-to-do))
+                    (rec (append current-base (list s-bar)))))))))))
+
 
     ;;;; (define (mpoly-euclidean-division-residue less? initial-g fs)
     ;;;;   (define the-ring (mget-ring initial-g))

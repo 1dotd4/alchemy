@@ -30,14 +30,16 @@
   "Multivariate polynomial (internal) addition"
   (mpoly+
     R
+    mpoly-<glex
     '((1 1 2 10) (-1 2 1 1))
     '((-1 1 2 10) (7 2 3 4)))
-  '((-1 2 1 1) (7 2 3 4)))
+  '((7 2 3 4) (-1 2 1 1)))
 
 (steer-observe
   "Multivariate polynomial (internal) addition"
   (mpoly+
     R
+    mpoly-<glex
     '()
     '((-1 1 2 10) (7 2 3 4)))
   '((-1 1 2 10) (7 2 3 4)))
@@ -46,6 +48,7 @@
   "Multivariate polynomial (internal) addition"
   (mpoly+
     R
+    mpoly-<glex
     '((-1 1 2 10) (7 2 3 4))
     '())
   '((-1 1 2 10) (7 2 3 4)))
@@ -74,20 +77,60 @@
   "Multivatiate polynomial (internal) multiplication"
   (mpoly*
     R
+    mpoly-<glex
     '((2 1 0 0) (1 0 1 1))
     '((2 1 0 0) (1 0 1 1)))
   '((1 0 2 2) (4 1 1 1) (4 2 0 0)))
 
-(display
-  (mpoly->string
-    (mpoly-euclidean-division-residue
-      R
-      mpoly-<glex
-      '((1 2 1 1) (-1 0 1 3))
-      (list
-        '((1 1 1 1) (-1 1 1 0))
-        '((1 2 1 0) (-1 0 1 1))
-        '((1 0 1 2) (-1 0 1 1))))))
+(steer-observe
+  "Multivariate polynomial (internal) remainder of division is zero"
+  (mpoly-euclidean-division-residue
+    R
+    mpoly-<glex
+    '((1 2 1 1) (-1 0 1 3))
+    (list
+      '((1 1 1 1) (-1 1 1 0))
+      '((1 2 1 0) (-1 0 1 1))
+      '((1 0 1 2) (-1 0 1 1))))
+  '())
+
+(steer-observe
+  "Multivariate polynomial (internal) remainder of division is yz^2 − yz"
+  (mpoly-euclidean-division-residue
+    R
+    mpoly-<glex
+    '((-1 2 1 0) (1 0 1 2))
+    (list
+      '((1 1 1 1) (-1 1 1 0))
+      '((1 2 1 0) (-1 0 1 1))))
+  '((1 0 1 2) (-1 0 1 1)))
+
+(steer-observe
+  "Multivariate polynomial (internal) s-polynomial"
+  (s-polynomial
+    R mpoly-<glex
+    '((2 1 1 2) (-1 1 1 0))
+    '((3 2 2 1) (-5 1 1 1)))
+  '((-1/2 2 2 0) (5/3 1 1 2)))
+
+; (map
+;   (o display mpoly->string)
+;   (grobner-basis
+;     R
+;     mpoly-<glex
+;     '(((1 1 1 1) (-1 1 1 0))
+;       ((1 2 1 0) (-1 0 1 1)))))
+
+(steer-observe
+  "Multivariate polynomial (internal) grobner basis"
+  (grobner-basis
+    R
+    mpoly-<glex
+    '(((1 1 1 1) (-1 1 1 0))
+      ((1 2 1 0) (-1 0 1 1))))
+    '(((1 1 1 1) (-1 1 1 0))
+      ((1 2 1 0) (-1 0 1 1))
+      ((1 0 1 2) (-1 0 1 1))))
 
 (exit)
 

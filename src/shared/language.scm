@@ -22,6 +22,7 @@
     define-curried
     compose
     applify
+    and*
     ; W
 
     ; export stuff from srfi-1
@@ -136,5 +137,8 @@
     ;   (syntax-rules ()
     ;     ((_ fn arg)
     ;      (fn arg arg))))
+
+    (define (and* . xz)
+      (every (lambda (x) x) xz))
 
     ))
