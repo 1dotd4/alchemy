@@ -17,7 +17,7 @@
 (define-library (alchemy number-theory)
   (export double-and-add square-multiply
           divisors
-          gcd xgcd
+          gcd xgcd xgcd->d xgcd->u xgcd->v
           chinese-remainder-theorem
           sum-of-two-squares? prime? kronecker legendreSymbol
           tonelli phi
