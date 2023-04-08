@@ -26,29 +26,39 @@
     '((1 1 2 100)
       (-1 2 1 1))))
 
+(define r-xyz (FXs RR mpoly-<glex 3))
+
 (steer-observe
-  "Multivariate polynomial (internal) addition"
-  (mpoly+
-    R
-    mpoly-<glex
+  "Multivariate polynomial addition"
+  (r:add
+    r-xyz 
     '((1 1 2 10) (-1 2 1 1))
     '((-1 1 2 10) (7 2 3 4)))
+  ; (mpoly+
+  ;   R
+  ;   mpoly-<glex
+  ;   '((1 1 2 10) (-1 2 1 1))
+  ;   '((-1 1 2 10) (7 2 3 4)))
   '((7 2 3 4) (-1 2 1 1)))
 
 (steer-observe
-  "Multivariate polynomial (internal) addition"
-  (mpoly+
-    R
-    mpoly-<glex
+  "Multivariate polynomial addition"
+  (r:add
+    r-xyz
+  ; (mpoly+
+  ;   R
+  ;   mpoly-<glex
     '()
     '((-1 1 2 10) (7 2 3 4)))
   '((-1 1 2 10) (7 2 3 4)))
 
 (steer-observe
-  "Multivariate polynomial (internal) addition"
-  (mpoly+
-    R
-    mpoly-<glex
+  "Multivariate polynomial addition"
+  (r:add
+    r-xyz
+  ; (mpoly+
+  ;   R
+  ;   mpoly-<glex
     '((-1 1 2 10) (7 2 3 4))
     '())
   '((-1 1 2 10) (7 2 3 4)))
@@ -73,11 +83,23 @@
   (mleading-monomial mpoly-<glex '((1 1 2 100) (-1 1 3 1)))
   '(1 1 2 100))
 
+
 (steer-observe
-  "Multivatiate polynomial (internal) multiplication"
+  "Multivatiate polynomial multiplication"
   (mpoly*
-    R
+    RR
     mpoly-<glex
+    '((2 1 0 0) (1 0 1 1))
+    '((2 1 0 0) (1 0 1 1)))
+  '((1 0 2 2) (4 1 1 1) (4 2 0 0)))
+
+(steer-observe
+  "Multivatiate polynomial multiplication"
+  (r:multiply
+    r-xyz
+  ; (mpoly*
+  ;   R
+  ;   mpoly-<glex
     '((2 1 0 0) (1 0 1 1))
     '((2 1 0 0) (1 0 1 1)))
   '((1 0 2 2) (4 1 1 1) (4 2 0 0)))
@@ -85,7 +107,7 @@
 (steer-observe
   "Multivariate polynomial (internal) remainder of division is zero"
   (mpoly-euclidean-division-residue
-    R
+    RR
     mpoly-<glex
     '((1 2 1 1) (-1 0 1 3))
     (list
@@ -97,7 +119,7 @@
 (steer-observe
   "Multivariate polynomial (internal) remainder of division is yz^2 − yz"
   (mpoly-euclidean-division-residue
-    R
+    RR
     mpoly-<glex
     '((-1 2 1 0) (1 0 1 2))
     (list
@@ -108,7 +130,7 @@
 (steer-observe
   "Multivariate polynomial (internal) s-polynomial"
   (s-polynomial
-    R mpoly-<glex
+    RR mpoly-<glex
     '((2 1 1 2) (-1 1 1 0))
     '((3 2 2 1) (-5 1 1 1)))
   '((-1/2 2 2 0) (5/3 1 1 2)))
@@ -124,7 +146,7 @@
 (steer-observe
   "Multivariate polynomial (internal) grobner basis"
   (grobner-basis
-    R
+    RR
     mpoly-<glex
     '(((1 1 1 1) (-1 1 1 0))
       ((1 2 1 0) (-1 0 1 1))))

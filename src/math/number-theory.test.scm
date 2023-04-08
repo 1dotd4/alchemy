@@ -66,3 +66,6 @@
 
 (steer-taste "Is 7^6 a prime power?" (prime-power? (expt 7 6)))
 (steer-taste "Is 6^4 a prime power?" (not (prime-power? (expt 6 4))))
+
+(display (lenstra-method 120))
+(display "\n")

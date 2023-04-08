@@ -46,6 +46,8 @@
     mpoly-euclidean-division-residue
     s-polynomial
     grobner-basis
+    make-multivariate-polynomial-ring-over-field-with-order
+    FXs
     )
   (import (scheme base)
           (scheme write)
@@ -246,6 +248,7 @@
         (make-poly K '(1)) poly*
         (lambda (A B) (car (poly-euclidean-division A B)))
         (lambda (A B) (< (poly-degree A) (poly-degree B)))))
+    ;; TODO change poly-type to list
 
     (define (poly->monic-polynomial f)
       (let* ((field (get-ring f))
@@ -396,10 +399,10 @@
           (map (monomial-multiplication f) g)))
       (fold internal-multiply f gs))
 
-    (define (mpoly-opposite R f)
-      (define (monomial-opposite m)
+    (define (mpoly-negate R f)
+      (define (monomial-negate m)
         (cons (r:negate R (car m)) (cdr m)))
-      (map monomial-opposite f))
+      (map monomial-negate f))
 
     (define (mleading-term less? mp)
       (car (reverse (sort mp less?))))
@@ -426,14 +429,14 @@
           (let try ((rfs fs))
             (if (null? rfs)
               (rec
-                (mpoly+ R less? g (mpoly-opposite R (list (mleading-term less? g))))
+                (mpoly+ R less? g (mpoly-negate R (list (mleading-term less? g))))
                 (mpoly+ R less? r (list (mleading-term less? g))))
               (if (monomial-divisible? (mleading-monomial less? (car rfs))
                                        (mleading-monomial less? g))
                 (let* ((gamma (mmonomial-division
                                 (mleading-term less? g)
                                 (mleading-term less? (car rfs))))
-                      (f* (mpoly* R less? (mpoly-opposite R gamma) (car rfs))))
+                      (f* (mpoly* R less? (mpoly-negate R gamma) (car rfs))))
                   (rec (mpoly+ R less? g f*) r))
                 (try (cdr rfs))))))))
 
@@ -445,7 +448,7 @@
                       (mleading-monomial less? f)
                       (mleading-monomial less? g)))
               (alpha (mmonomial-division gamma (mleading-term less? f)))
-              (beta  (mpoly-opposite R (mmonomial-division gamma (mleading-term less? g)))))
+              (beta  (mpoly-negate R (mmonomial-division gamma (mleading-term less? g)))))
         (mpoly+
           R
           less?
@@ -470,30 +473,20 @@
                     (rec (append current-base (list s-bar)))))))))))
 
 
-    ;;;; (define (mpoly-euclidean-division-residue less? initial-g fs)
-    ;;;;   (define the-ring (mget-ring initial-g))
-    ;;;;   (let rec ((g initial-g) (r (make-multivariate-poly the-ring '())))
-    ;;;;     (if (mpoly-zero? g)
-    ;;;;       r
-    ;;;;       (if (less? (mleading-monomial (car fs))
-    ;;;;                  (mleading-monomial g))
-    ;;;;         (let ((d (mmonomial-division ring (mleading-monomial g) (mleading-monomial (car fs)))))
-    ;;;;           (mpoly+
-    ;;;;             g
-    ;;;;             (mpoly-opposite
-    ;;;;               (mpoly*
-    ;;;;       (mpoly+ g (car fs)))))
-    ;;   (let rec ((g initial-g) (r (make-multivariate-poly the-ring '())))
-    ;;     (if (mpoly-zero? g)
-    ;;       r ; return the remainder, looks like nobody cares about the quotient
-    ;;       (let try ((mf (car fs)) (mfs (cdr fs)))
-    ;;         (
+    (define (make-multivariate-polynomial-ring-over-field-with-order K less? number-of-variables)
+      ;; TODO: how to get inner ring?
+      (make-ring
+        polynomial? 'inf
+        '()
+        (lambda (A B) (mpoly+ K less? A B))
+        (lambda (A) (mpoly-negate K A))
+        (list (cons (r:one K) (make-list number-of-variables (r:zero K))))
+        (lambda (A B) (mpoly* K less? A B))
+        (lambda (A B) (error "does not make sense to me right now"))
+        less?))
 
-    ;;     ;; ...
+    (define FXs make-multivariate-polynomial-ring-over-field-with-order)
 
-    ;;     ;; find a fi in fs that can divide g
-    ;;     ;; otherwise add cx^gamma to the remainder
-    ;;    ))
 
     ;;; 3.4 Factorization of Polynomials Modulo p
     ;; (define (berlekamp-factorization p f)

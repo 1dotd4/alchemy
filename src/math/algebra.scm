@@ -29,7 +29,7 @@
           
           integer-ring Z
           make-integer-ring-modulo ZZn
-          real-field R
+          real-field RR
           )
   (import (scheme base)
           (scheme case-lambda)
@@ -242,7 +242,7 @@
       (make-field number? 'inf
                   0 + - 1 * quotient < (lambda (a) (/ 1 a))))
 
-    (define R real-field)
+    (define RR real-field)
 
 
 
