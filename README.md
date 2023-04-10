@@ -52,10 +52,7 @@ Basic functions, algebraic structures, and combinators. See documentation.
 
 ### Planned
 
-- LLL
-- Gröbner basis
-- Berlekamp's algorithm
+- Berlekamp's algorithm for polynomial factorization
 - Berlekamp–Massey algorithm
-- ECM integer factorization
 - Distributed computation
 
