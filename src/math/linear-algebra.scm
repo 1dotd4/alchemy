@@ -24,7 +24,7 @@
     matrix-identity
     matrix-inverse
     matrix-multiplication
-    matrix-determinat
+    matrix-determinant
     matrix-kernel
     transpose
 
@@ -377,7 +377,7 @@
 
     ; 2.2.3
     ;; using ordinary elimination
-    (define (matrix-determinat M-orig)
+    (define (matrix-determinant M-orig)
       ; check square
       (define n (vector-length M-orig))
       (if (not (= n (vector-length (vector-ref M-orig 0))))
@@ -392,7 +392,7 @@
           ; 3. Found all zero entry
           [(= i n) 0]
           ; 3. Find non-zero entry
-          [(zero? (ma M i j)) (loop j (+ 1 i))]
+          [(zero? (ma M i j)) (loop j (+ 1 i) x)]
           ; 4. swap?
           [(> i j)
                 (begin
