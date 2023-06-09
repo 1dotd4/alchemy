@@ -115,7 +115,7 @@
         ((n) (encode-grid n 0))
         ((n pad)
          (if (zero? n)
-           (if (zero? pad) ""
+           (if (<= pad 0) ""
              (apply string-append (make-list pad "  ")))
            (string-append
              (encode-grid

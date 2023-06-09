@@ -1,4 +1,4 @@
-;; This file is part of alchemy.
+;; This file is part of Alchemy.
 ;; Copyright (c) 2022 unpx.net
 ;;
 ;; This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,6 @@
           ring->multiplicative-monoid
           field->multiplicative-group
           ;;
-          
           integer-ring Z
           make-integer-ring-modulo ZZn
           real-field RR
@@ -57,6 +56,7 @@
     ;; 0 1 2 3
     ;; => 4
     (define (range i j)
+      ;; TODO make this work for i > j
       (iota (- j i) i 1))
 
 
@@ -216,6 +216,8 @@
       ; K a field (but can be also a ring tbh)
       ; V the basis of our vector space
       (error "YOLO!"))
+    ;; TODO: K can also be a special Module, special Vector Space, or an Algebra
+    ;;       Thus how to keep track of base ring/fields of which this could be composed of?
 
 
     ;;;; Algebra-like structure

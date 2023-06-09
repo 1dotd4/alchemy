@@ -56,3 +56,8 @@ Basic functions, algebraic structures, and combinators. See documentation.
 - Berlekamp–Massey algorithm
 - Distributed computation
 
+
+### Wish to
+
+- Hensel lifting
+

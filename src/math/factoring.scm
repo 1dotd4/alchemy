@@ -50,6 +50,7 @@
 
     ;; discrete logs?
 
+    ;; TODO Algorithm 10.3.4 Parallel Inverse Modulo N
 
     (define (lenstra-method given-n)
       (define (try-add P Q n A)

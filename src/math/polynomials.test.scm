@@ -95,13 +95,7 @@
 
 (steer-observe
   "Multivatiate polynomial multiplication"
-  (r:multiply
-    r-xyz
-  ; (mpoly*
-  ;   R
-  ;   mpoly-<glex
-    '((2 1 0 0) (1 0 1 1))
-    '((2 1 0 0) (1 0 1 1)))
+  (r:multiply r-xyz '((2 1 0 0) (1 0 1 1)) '((2 1 0 0) (1 0 1 1)))
   '((1 0 2 2) (4 1 1 1) (4 2 0 0)))
 
 (steer-observe
