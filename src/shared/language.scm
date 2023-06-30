@@ -45,12 +45,15 @@
     alist-cons
     zip
 
+    string-join
+
     )
   (import (scheme base)
           (scheme case-lambda)
           (scheme write)
           (srfi 1)
           (srfi 232)
+          (srfi 152)
           )
 
   (begin

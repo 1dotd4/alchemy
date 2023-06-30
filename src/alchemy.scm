@@ -18,6 +18,7 @@
 
 (load "src/shared/cauldron.scm")
 (load "src/shared/language.scm")
+(load "src/shared/rewrite.scm")
 (load "src/shared/graph.scm")
 (load "src/math/algebra.scm")
 (load "src/math/number-theory.scm")
@@ -34,6 +35,8 @@
   (load "src/alchemy.scm"))
 
 (import (alchemy cauldron)
+        (alchemy language)
+        (alchemy rewrite)
         (alchemy algebra)
         (alchemy number-theory)
         (alchemy polynomials)
